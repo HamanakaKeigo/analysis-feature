@@ -16,19 +16,31 @@ def get_features(filename = "",ip=""):
 
     https = 443
     http  = 80
+    first_time=0
+    for packet in data:
+        if "TCP" in packet:
+            if(int(packet.tcp.srcport) == (https or http) or int(packet.tcp.dstport) == (http or https)):
+                first_time = packet.sniff_time
+                break
+
+
     for packet in data:
         if "TCP" in packet:
 
             if(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
                 packet_trace.append([packet.sniff_timestamp , int(packet.tcp.len) + int(packet.tcp.hdr_len)])
                 all_size += int(packet.length)
+                end_time = packet.sniff_time
             elif(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
                 packet_trace.append([packet.sniff_timestamp , -int(packet.tcp.hdr_len) - int(packet.tcp.len)])
                 all_size += int(packet.length)
+                end_time = packet.sniff_time
+
         #close(packet)
     print(all_size)
+    all_time = (end_time - first_time).total_seconds()
     data.close()
-    return(all_size)
+    return(all_size,all_time)
 
 
 if __name__ == "__main__":
@@ -43,15 +55,20 @@ if __name__ == "__main__":
             s = site.split()
             if s[0] == "#":
                 continue
+            all_time=[]
 
             for i in range(train_size):
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
                     break
-                size = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
+                size,time = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
                 all_size.append(size)
+                all_time.append(time)
 
             f = open('../data/features/all_size/'+s[1], 'wb')
             pickle.dump(all_size,f)
+            f.close()
+            f = open('../data/features/all_time/'+s[1], 'wb')
+            pickle.dump(all_time,f)
             f.close()
         
             print("get feature of :" + s[1])

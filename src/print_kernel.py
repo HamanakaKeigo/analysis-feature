@@ -20,19 +20,11 @@ all_time = np.reshape(all_time,(-1,1))
 
 
 
-xticks_s = np.linspace(all_size.min()-10000, all_size.max()+10000, 20*(all_size.max()-all_size.min()))
+xticks_s = np.linspace(all_size.min()-100000, all_size.max()+100000, 20*(all_size.max()-all_size.min()))
 xticks_s = np.reshape(xticks_s,(-1,1))
 
-xticks_t = np.linspace(all_time.min()-0.1, all_time.max()+0.1, 10000)
+xticks_t = np.linspace(all_time.min()-1, all_time.max()+1, 10000)
 xticks_t = np.reshape(xticks_t,(-1,1))
-
-"""
-kde = gaussian_kde(all_size)
-xticks = np.linspace(1000000, 10000000, 1000000)
-#kde.set_bandwidth(bw_method=float(1))
-estimate = kde.evaluate(xticks)
-print(kde.covariance)
-"""
 
 
 
@@ -51,13 +43,6 @@ kde_t = KernelDensity(kernel="gaussian",bandwidth=1.06*(width**0.5)).fit(all_tim
 estimate_t = np.exp(kde_t.score_samples(xticks_t))
 
 
-
-"""
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.plot(xticks,estimate)
-plt.show()
-"""
 
 fig = plt.figure()
 ax1 = fig.add_subplot(121)
