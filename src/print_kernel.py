@@ -6,54 +6,90 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import matlab
-
-f = open("../data/features/all_size/www.osaka-u.ac.jp","rb")
-all_size = pickle.load(f)
-all_size = np.array(all_size)
-all_size = np.reshape(all_size,(-1,1))
-
-
-f = open("../data/features/all_time/www.osaka-u.ac.jp","rb")
-all_time = pickle.load(f)
-all_time = np.array(all_time)
-all_time = np.reshape(all_time,(-1,1))
+from scipy import integrate
+from scipy.integrate import cumtrapz
+import sympy as sym
+import math
 
 
 
-xticks_s = np.linspace(all_size.min()-100000, all_size.max()+100000, 20*(all_size.max()-all_size.min()))
-xticks_s = np.reshape(xticks_s,(-1,1))
-
-xticks_t = np.linspace(all_time.min()-1, all_time.max()+1, 10000)
-xticks_t = np.reshape(xticks_t,(-1,1))
-
-
-
-fac = len(all_size) ** -0.2
-width = (fac**2)*np.var(all_size,ddof=1)
-print(width)
-kde_s = KernelDensity(kernel="gaussian",bandwidth=1.06*(width**0.5)).fit(all_size)
-estimate_s = np.exp(kde_s.score_samples(xticks_s))
-#経験則的手法
-#bw_str = str(kde_model.bandwidth.round(2))
-
-fac = len(all_time) ** -0.2
-width = (fac**2)*np.var(all_time,ddof=1)
-print(width)
-kde_t = KernelDensity(kernel="gaussian",bandwidth=1.06*(width**0.5)).fit(all_time)
-estimate_t = np.exp(kde_t.score_samples(xticks_t))
-
+with open("../data/feature",'r') as f1:
+    features = f1.readlines()
+    for feature in features:
+        f = feature.split()
+        print(f[0])
+        Feature_data = {"all":[]}
+        sites = ""
+        with open("../data/sites",'r') as f2:
+            sites = f2.readlines()
+            for site in sites:
+                s = site.split()
+                if s[0] == "#":
+                    continue
+                with open("../data/features/"+f[0]+"/"+s[1],"rb") as f3:
+                    a = pickle.load(f3)
+                    a = np.array(a)
+                    a = np.reshape(a,(-1,1))
+                    Feature_data["all"].append(a)
+                    Feature_data[s[1]] = a
+                    #print(Feature_data[feature])
 
 
-fig = plt.figure()
-ax1 = fig.add_subplot(121)
-ax1.plot(xticks_s,estimate_s)
-ax1.set_title("size")
-#plt.xticks(data)
+        
 
-ax2 = fig.add_subplot(122)
-ax2.plot(xticks_t,estimate_t)
-ax2.set_title("time")
-plt.show()
-fig.savefig("../data/pic")
+        fd = np.array(Feature_data["all"]).reshape(-1,1)
+        fac = len(fd) ** -0.2
+        width = (fac**2)*np.var(fd,ddof=1)
+        bw = 1.06*(width**0.5)
+        print("bw = " + str(bw))
+        xticks = np.linspace(fd.min()-bw*4, fd.max()+bw*4, 10000)
+        Xticks = np.reshape(xticks,(-1,1))
 
+        kde = KernelDensity(kernel="gaussian",bandwidth=bw).fit(fd)
+        estimate = np.exp(kde.score_samples(Xticks))
+
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+        ax1.plot(xticks,estimate*len(fd))
+        ax1.set_title(f[0])
+        
+        Hcf=0
+        Hc=0
+        for site in sites:
+            s = site.split()
+            if s[0] == "#":
+                continue
+            name = s[1]
+
+            
+
+            sfd = np.array(Feature_data[name]).reshape(-1,1)
+            kde_s = KernelDensity(kernel="gaussian",bandwidth=bw).fit(sfd)
+            estimate_s = np.exp(kde_s.score_samples(Xticks))
+            #print(name +" of len : " + str(len(Feature_data[name])))
+
+            rate = len(sfd)/len(fd)
+            Hc += rate*math.log2(rate)
+            rate = (estimate_s*len(sfd))/(estimate*len(fd))
+            pc = rate*np.log2(rate)
+            x = pc*estimate
+            #print("rate = " + str(rate))
+            #print("pc = "+str(pc))
+            #print("x = " + str(x))
+            mutual = cumtrapz(x,xticks)
+
+            print("mutual of " + name + " : " + str(mutual[-1]))
+            Hcf+=mutual[-1]
+
+            ax1.plot(xticks,estimate_s*len(sfd),label=name)
+            #if(name=="www.osaka-u.ac.jp"):
+                #ax1.plot(xticks,x,label=name)
+
+        print("total Hcf : " + str(-Hcf))
+        print("total Hc : " + str(-Hc))
+        
+        plt.legend()
+        plt.show()
+        fig.savefig("../data/"+f[0]+".png")
+        print("--------------------")
 

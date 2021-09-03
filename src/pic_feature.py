@@ -52,10 +52,11 @@ if __name__ == "__main__":
         sites = f.readlines()
         for site in sites:
             all_size=[]
+            all_time=[]
             s = site.split()
             if s[0] == "#":
                 continue
-            all_time=[]
+            
 
             for i in range(train_size):
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):

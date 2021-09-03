@@ -3,25 +3,18 @@ import os
 import numpy as np
 import pickle
 import sys
+from scipy import integrate
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats.distributions import norm
+from sklearn.neighbors import KernelDensity
+import seaborn as sns
+from scipy.integrate import cumtrapz
 
-train_size=100
-all_time=[]
-with open("../data/sites",'r') as f:
-    sites = f.readlines()
-    for site in sites:
-        s = site.split()
-        if s[0] == "#":
-            continue
-        f = open("../data/features/all_time/"+s[1],"rb")
-        all_size = pickle.load(f)
-        all_size_v = []
-        print(all_size)
-        """
-        for size in all_size:
-            all_size_v.append(-size) 
-        f.close()
 
-        f = open("../data/features/all_time/"+s[1], 'wb')
-        pickle.dump(all_size_v,f)
-        f.close()
-        """
+with open("../data/features/all_size/www.amazon.co.jp","rb") as f3:
+    a = pickle.load(f3)
+    a = np.array(a)
+    a = np.reshape(a,(-1,1))
+    print(len(a))
+    #print(Feature_data[feature])
