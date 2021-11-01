@@ -17,7 +17,9 @@ with open("../data/feature",'r') as f1:
     features = f1.readlines()
     for feature in features:
         f = feature.split()
-        print(f[0])
+        if f[0] == "#":
+            continue
+        #print(f[0])
         Feature_data = {"all":[]}
         sites = ""
         with open("../data/sites",'r') as f2:
@@ -49,9 +51,9 @@ with open("../data/feature",'r') as f1:
         estimate = np.exp(kde.score_samples(Xticks))
 
         fig = plt.figure()
-        ax1 = fig.add_subplot(111)
+        ax1 = fig.add_subplot(111,xlabel=f[0],ylabel="rate")
         ax1.plot(xticks,estimate*len(fd))
-        ax1.set_title(f[0])
+        #ax1.set_title(f[0])
         
         Hcf=0
         Hc=0
@@ -82,11 +84,15 @@ with open("../data/feature",'r') as f1:
             Hcf+=mutual[-1]
 
             ax1.plot(xticks,estimate_s*len(sfd),label=name)
-            #if(name=="www.osaka-u.ac.jp"):
-                #ax1.plot(xticks,x,label=name)
+            if(name=="www.osaka-u.ac.jp"):
+                mut = cumtrapz((estimate_s*len(sfd))/(estimate*len(fd)),xticks)
+                #print("mut = :"+str(mut[-1]))
+                #ax2 = fig.add_subplot(212,xlabel=f[0],ylabel="rate")
+                #ax2.plot(xticks,(estimate_s*len(sfd))/(estimate*len(fd)),label=name)
 
         print("total Hcf : " + str(-Hcf))
         print("total Hc : " + str(-Hc))
+        print("total mutual : "+str(Hcf-Hc))
         
         plt.legend()
         plt.show()
