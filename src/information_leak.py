@@ -14,31 +14,46 @@ import scipy.io
 
 
 
+infomation_leakage={}
+
 with open("../data/feature",'r') as f1:
     features = f1.readlines()
+    keys=[]
     for feature in features:
         f = feature.split()
         if f[0] == "#":
             continue
-        Feature_data = {"all":{}}
+        Feature_data = {}
         with open("../data/sites",'r') as f2:
             sites = f2.readlines()
             for site in sites:
                 s = site.split()
                 if s[0] == "#":
                     continue
-                mat = scipy.io.loadmat("../data/features/"+f[0]+"/"+s[1]+".mat") 
-                for key in mat.keys():
-                    x = np.array(mat[key])
-                    x = np.reshape(x,(-1,1))
-                    Feature_data[key][s[1]] = x
-                    Feature_data[key]["all"].append(x)
+
+                with open("../data/features/"+f[0]+"/"+s[1],"rb") as f3:
+                    data = pickle.load(f3)
+                    for p in data:
+                        for key in p.keys():
+                            if key not in Feature_data:
+                                Feature_data[key]={}
+                                Feature_data[key]["all"]=np.empty(0)
+                            if s[1] not in Feature_data[key]:
+                                Feature_data[key][s[1]] = np.empty(0)
+                            #print(p)
+                            x = np.array(p[key])
+                            #x = np.reshape(x,(-1,1))
+                            Feature_data[key][s[1]] = np.append(Feature_data[key][s[1]],x)
+                            Feature_data[key]["all"] = np.append(Feature_data[key]["all"],x)
 
 
-        
+                Feature_data[key][s[1]] = np.reshape(Feature_data[key][s[1]],(-1,1))
+
+
         for key in Feature_data.keys():
-
+            print("key="+key)
             fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
+            #print(fd)
             fac = len(fd) ** -0.2
             width = (fac**2)*np.var(fd,ddof=1)
             bw = 1.06*(width**0.5)
@@ -64,7 +79,7 @@ with open("../data/feature",'r') as f1:
 
             
 
-                sfd = np.array(Feature_data[name]).reshape(-1,1)
+                sfd = np.array(Feature_data[key][name]).reshape(-1,1)
                 kde_s = KernelDensity(kernel="gaussian",bandwidth=bw).fit(sfd)
                 estimate_s = np.exp(kde_s.score_samples(Xticks))
                 #print(name +" of len : " + str(len(Feature_data[name])))
@@ -92,9 +107,28 @@ with open("../data/feature",'r') as f1:
             print("total Hcf : " + str(-Hcf))
             print("total Hc : " + str(-Hc))
             print("total mutual : "+str(Hcf-Hc))
-            
+            infomation_leakage[key] = Hcf-Hc
             plt.legend()
-            plt.show()
+            #plt.show()
             fig.savefig("../data/"+f[0]+".png")
             print("--------------------")
-
+print(infomation_leakage)
+test=[]
+test.append(infomation_leakage["max"])
+test.append(infomation_leakage["ave"])
+test.append(infomation_leakage["len"])
+test.append(infomation_leakage["g5"])
+test.append(infomation_leakage["g10"])
+test.append(infomation_leakage["g15"])
+test.append(infomation_leakage["0"])
+test.append(infomation_leakage["1"])
+test.append(infomation_leakage["2"])
+test.append(infomation_leakage["3"])
+test.append(infomation_leakage["4"])
+print(test)
+fig = plt.figure()
+ax1 = fig.add_subplot(111,xlabel=f[0],ylabel="rate")
+ax1.plot(test,label=name)
+plt.legend()
+plt.show()
+fig.savefig("../data/test.png")

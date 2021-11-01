@@ -147,7 +147,10 @@ if __name__ == "__main__":
             pickle.dump(out_ps,f)
             f.close()
             #f = open('../data/features/burst/'+s[1]+".mat", 'wb')
-            scipy.io.savemat("../data/features/burst/"+s[1]+".mat", bur)
+            #print(bur)
+            f = open('../data/features/burst/'+s[1], 'wb')
+            pickle.dump(burst,f)
+            f.close()
 
         
             print("get feature of :" + s[1])
