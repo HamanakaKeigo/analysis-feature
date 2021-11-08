@@ -7,73 +7,143 @@ import scipy.io
 
 
 def save_burst(burst=[]):
-    bur = {"g5":0,"g10":0,"g15":0,"0":0,"1":0,"2":0,"3":0,"4":0}
-    bur["max"] = max(burst)
-    bur["ave"] = sum(burst)/len(burst)
-    bur["len"] = len(burst)
+    feature = []
+
+    feature.append(max(burst))
+    feature.append(sum(burst)/len(burst))
+    feature.append(len(burst))
+
+    x=0
+    y=0
+    z=0
     for i in burst:
         if i > 5:
-            bur["g5"] +=1
+            x +=1
         if i > 10:
-            bur["g10"] +=1
+            y +=1
         if i > 15:
-            bur["g15"] +=1
+            z +=1
+    feature.append(x)
+    feature.append(y)
+    feature.append(z)
+
     for i in range(0,5):
         try:
-            bur[str(i)]=burst[i]
+            feature.append(burst[i])
         except:
-            bur[str(i)]="X"
-    #print(bur)
-    return bur
+            feature.append("X")
+    
+    return feature
+
+def save_PktCount(Count={}):
+    feature=[]
+
+    feature.append(Count["total"])
+    feature.append(Count["out"])
+    feature.append(Count["in"])
+    
+    out_t = float(Count["out"])/Count["total"]
+    in_t = float(Count["in"])/Count["total"]
+
+    feature.append(out_t*100)
+    feature.append(in_t*100)
+
+    feature.append(int(15*round(float(Count["total"])/15)))
+    feature.append(int(15*round(float(Count["out"])/15)))
+    feature.append(int(15*round(float(Count["in"])/15)))
+    
+    feature.append(int(5*round(float(out_t*100)/5)))
+    feature.append(int(5*round(float(in_t*100)/5)))
+
+    feature.append(Count["total"]*512)
+    feature.append(Count["out"]*512)
+    feature.append(Count["in"]*512)
+    
+
+    return feature
+
+def save_time(Time={}):
+
+    feature=[]
+    pre=0
+    
+    ty=["total","out","in"]
+    for t in ty:
+        interval=[]
+        for time in Time[t]:
+            if(pre!=0):
+                interval.append(time-pre)
+            pre=time
+
+        feature.extend([np.max(interval),np.mean(interval),np.std(interval),np.percentile(interval,75)])
+        
+    for t in ty:
+        feature.extend([np.percentile(Time[t],25),np.percentile(Time[t],50),np.percentile(Time[t],75),np.percentile(Time[t],100)])
+
+    return feature
+
+def NgramLoc(sample,n):
+    index=0
+    bit=0
+    for i in range(0,n):
+        if sample[i]>0:
+            bit = 1
+        else:
+            bit = 0
+        index = index + bit*( 2**(n-i-1) )
+
+    return index
+
+def save_ngram(Size={},n=0):
+    buckets = [0]*(2**n)
+    for i in range(0,len(Size["total"])-n+1):
+        index = NgramLoc(Size["total"][i:i+n],n)
+        buckets[index] += 1
+
+    return buckets
 
 def get_features(filename = "",ip=""):
 
     #packet size (positive means outgoing and, negative, incoming.)
     data = pyshark.FileCapture(filename)
-    all_size=0
-    packet_num=0
-    packet_trace=[]
 
     https = 443
     http  = 80
-    first_time=0
-    packet_in=0
-    packet_out=0
-    max_size=0
+    start_time=0
     burst=[]
+    Count={"total":0,"in":0,"out":0}
+    Time={"total":[],"in":[],"out":[]}
+    Size={"total":[],"in":[],"out":[]}
     curburst=0
     stopped=0
-
-    for packet in data:
-        if "TCP" in packet:
-            if(int(packet.tcp.srcport) == (https or http) or int(packet.tcp.dstport) == (http or https)):
-                first_time = packet.sniff_time
-                break
-
 
     for packet in data:
         if "TCP" in packet:
 
             #to server
             if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-                packet_trace.append([packet.sniff_timestamp , int(packet.tcp.len) + int(packet.tcp.hdr_len)])
-                all_size += int(packet.length)
+
+
                 stopped=0
                 curburst+= int(packet.length)
-                packet_num+=1
-                packet_in+=1
-                end_time = packet.sniff_time
-                if(int(packet.length)>max_size):
-                    max_size=int(packet.length)
+                Count["total"] += 1
+                Count["out"] += 1
+                Time["total"].append(float(packet.sniff_timestamp))
+                Time["out"].append(float(packet.sniff_timestamp))
+                Size["total"].append(int(packet.length))
+                Size["out"].append(int(packet.length))
+                
             #from server
             elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-                packet_trace.append([packet.sniff_timestamp , -int(packet.tcp.hdr_len) - int(packet.tcp.len)])
-                all_size += int(packet.length)
-                packet_num+=1
-                packet_out+=1
-                end_time = packet.sniff_time
-                if(int(packet.length)>max_size):
-                    max_size=int(packet.length)
+
+
+                Count["total"] += 1
+                Count["in"] += 1
+                Time["total"].append(float(packet.sniff_timestamp))
+                Time["in"].append(float(packet.sniff_timestamp))
+                Size["total"].append(int(packet.length))
+                Size["in"].append(-int(packet.length))
+
                 if stopped==0:
                     stopped=1
                 elif stopped==1:
@@ -81,12 +151,20 @@ def get_features(filename = "",ip=""):
                     if curburst!=0:
                         burst.append(curburst)
                         curburst=0
+    data.close()
+    start_time=Time["total"][0]
+    Time["total"] = list(map(lambda x:x-start_time, Time["total"]))
+    Time["in"] = list(map(lambda x:x-start_time, Time["in"]))
+    Time["out"] = list(map(lambda x:x-start_time, Time["out"]))
 
     bur = save_burst(burst)
-    #print(all_size)
-    all_time = (end_time - first_time).total_seconds()
-    data.close()
-    return(all_size,all_time,packet_num,packet_in,max_size,all_time/packet_out,bur)
+    pktcount = save_PktCount(Count)
+    time_f = save_time(Time)
+    ngram=[]
+    for n in range(2,7):
+        ngram.extend(save_ngram(Size,n))
+    
+    return(bur,pktcount,time_f,ngram)
 
 
 
@@ -98,60 +176,23 @@ if __name__ == "__main__":
     with open("../data/sites",'r') as f:
         sites = f.readlines()
         for site in sites:
-            all_size=[]
-            all_time=[]
-            packet_num=[]
-            packet_in=[]
-            in_rate=[]
-            max_size=[]
-            out_ps=[]
-            burst=[]
 
             s = site.split()
             if s[0] == "#":
                 continue
             
-
+            features=[]
             for i in range(train_size):
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
                     break
-                size,time,num,p_in,m,o_ps,bur = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
-                all_size.append(size)
-                all_time.append(time)
-                packet_num.append(num)
-                in_rate.append(p_in/num)
-                max_size.append(m)
-                out_ps.append(o_ps)
-                burst.append(bur)
-
+                get = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
+                features.append(get)
 
                 print(str(i)+" times of " + s[1])
 
-
-            f = open('../data/features/all_size/'+s[1], 'wb')
-            pickle.dump(all_size,f)
+            f = open('../data/features/total/'+s[1], 'wb')
+            pickle.dump(features,f)
             f.close()
-            f = open('../data/features/all_time/'+s[1], 'wb')
-            pickle.dump(all_time,f)
-            f.close()
-            f = open('../data/features/packet_num/'+s[1], 'wb')
-            pickle.dump(packet_num,f)
-            f.close()
-            f = open('../data/features/in_rate/'+s[1], 'wb')
-            pickle.dump(in_rate,f)
-            f.close()
-            f = open('../data/features/max_size/'+s[1], 'wb')
-            pickle.dump(max_size,f)
-            f.close()
-            f = open('../data/features/out_ps/'+s[1], 'wb')
-            pickle.dump(out_ps,f)
-            f.close()
-            #f = open('../data/features/burst/'+s[1]+".mat", 'wb')
-            #print(bur)
-            f = open('../data/features/burst/'+s[1], 'wb')
-            pickle.dump(burst,f)
-            f.close()
-
         
             print("get feature of :" + s[1])
 
