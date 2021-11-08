@@ -6,8 +6,25 @@ import sys
 import scipy.io
 
 
-def save_burst(burst=[]):
+def save_burst(Size):
+
     feature = []
+    burst = []
+    stopped=0
+    curburst=0
+
+    for size in Size["total"]:
+        if size>0:
+            stopped=0
+            curburst += size
+        elif size<0:
+            if stopped==0:
+                stopped=1
+            elif stopped==1:
+                stopped=0
+                if curburst!=0:
+                    burst.append(curburst)
+                    curburst=0
 
     feature.append(max(burst))
     feature.append(sum(burst)/len(burst))
@@ -102,6 +119,167 @@ def save_ngram(Size={},n=0):
 
     return buckets
 
+def save_transpos(Size={}):
+    in_count=0
+    out_count=0
+    in_feature=[]
+    out_feature=[]
+    feature=[]
+
+    for i in range(len(Size["total"])):
+        if out_count>=300 and in_count>=300:
+            break
+
+        if (Size["total"][i]>0):
+            if(out_count<300):
+                out_count+=1
+                out_feature.append(i)
+        elif(Size["total"][i]<0):
+            if(in_count<300):
+                in_count+=1
+                in_feature.append(i)
+
+    for i in range(in_count,300):
+        in_feature.append("X")
+    for i in range(out_count,300):
+        out_feature.append("X")
+    
+    feature.extend(out_feature)
+    feature.append(np.std(out_feature))
+    feature.append(np.mean(out_feature))
+
+    feature.extend(in_feature)
+    feature.append(np.std(in_feature))
+    feature.append(np.mean(in_feature))
+
+    return feature
+
+
+def save_intI(Size):
+    feature=[]
+    in_count=0
+    in_pre=0
+    in_feature=[]
+    out_count=0
+    out_pre=0
+    out_feature[]
+
+    for i in range(0,len(Size["total"])):
+        if in_count>=300 and out_count>=300:
+            break
+        
+        if Size["total"][i]>0:
+            if(out_count<300):
+                out_count+=1
+                out_feature.append(i-out_pre)
+                out_pre=i
+        elif Size["total"][i]<0:
+            if(in_count<300):
+                in_count+=1
+                in_feature.append(i-in_pre)
+                in_pre=i
+
+    for i in range(in_count,300):
+        in_feature.append("X")
+    for i in range(out_count,300):
+        out_feature.append("X")
+
+    feature.append(out_feature)
+    feature.append(in_feature)
+
+def save_intII_III(Size):
+    feature=[]
+    MAX=300
+    in_feature=0
+    out_feature=0
+    in_pre=0
+    out_pre=0
+
+    interval_freq_in = [0] * (MAX+1)
+    interval_freq_out = [0] * (MAX+1)
+
+    for i in range(0,len(Size["total"])):
+        if Size["total"][i]>0:
+            interval_freq_out[min([MAX,i-out_pre-1])]
+            out_pre=i
+        elif Size["total"][i]<0:
+            interval_freq_in[min([MAX,i-in_pre-1])]
+            in_pre=i
+    feature.extend(interval_freq_out)
+    feature.extend(interval_freq_in)
+
+    feature.extend(interval_freq_out[0:3])
+    feature.append( sum(interval_freq_out[3:6]))
+    feature.append( sum(interval_freq_out[6:9]))
+    feature.append( sum(interval_freq_out[9:14]))
+    feature.extend(interval_freq_out[14:])
+
+    feature.extend(interval_freq_in[0:3])
+    feature.append( sum(interval_freq_in[3:6]))
+    feature.append( sum(interval_freq_in[6:9]))
+    feature.append( sum(interval_freq_in[9:14]))
+    feature.extend(interval_freq_in[14:])
+
+def save_dist(Size,Time):
+    count = 0
+    feature=[]
+    tmp=[]
+
+    for i in range(0, min(len(Size["total"]),6000)):
+        if Size["total"][i] > 0:
+            count+=1
+        if (i%30) == 29:
+            tmp.append(count)
+            count = 0
+    
+    for i range(len(Size["total"]/30),200)
+        tmp.append(0)
+
+    feature.extend(tmp)
+    feature.append(np.std(tmp))
+    feature.append(np.mean(tmp))
+    feature.append(np.median(tmp))
+    feature.append(np.max(tmp))
+
+    bucket = [0]*20
+    for i in range(0,200):
+        ib = i/10
+        bucket[ib] = bucket[ib] + tmp[i]
+    feature.extend(bucket)
+    feature.append(np.sum(bucket))
+
+    return feature
+
+def save_ht(Size):
+    feature=[]
+    for i in range(0,20):
+        feature.append(Size["total"][i]+1500)
+
+    in_count=0
+    out_count=0
+    for i in range(0,30):
+        if i < len(Size["total"]):
+            if(Size["total"][i]>0):
+                out_count += 1
+            elif(Size["total"][i]<0):
+                in_count += 1
+    feature.append(out_count)
+    feature.append(in_count)
+
+    in_count=0
+    out_count=0
+    for i in range(1,31):
+        if i < len(Size["total"]):
+            if(Size["total"][-i]>0):
+                out_count += 1
+            elif(Size["total"][-i]<0):
+                in_count += 1
+    feature.append(out_count)
+    feature.append(in_count)
+
+    return feature
+
+
 def get_features(filename = "",ip=""):
 
     #packet size (positive means outgoing and, negative, incoming.)
@@ -109,33 +287,25 @@ def get_features(filename = "",ip=""):
 
     https = 443
     http  = 80
-    start_time=0
     burst=[]
     Count={"total":0,"in":0,"out":0}
     Time={"total":[],"in":[],"out":[]}
     Size={"total":[],"in":[],"out":[]}
-    curburst=0
-    stopped=0
 
     for packet in data:
         if "TCP" in packet:
-
             #to server
             if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
 
-
-                stopped=0
-                curburst+= int(packet.length)
                 Count["total"] += 1
                 Count["out"] += 1
                 Time["total"].append(float(packet.sniff_timestamp))
                 Time["out"].append(float(packet.sniff_timestamp))
                 Size["total"].append(int(packet.length))
                 Size["out"].append(int(packet.length))
-                
+
             #from server
             elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-
 
                 Count["total"] += 1
                 Count["in"] += 1
@@ -144,27 +314,27 @@ def get_features(filename = "",ip=""):
                 Size["total"].append(int(packet.length))
                 Size["in"].append(-int(packet.length))
 
-                if stopped==0:
-                    stopped=1
-                elif stopped==1:
-                    stopped=0
-                    if curburst!=0:
-                        burst.append(curburst)
-                        curburst=0
     data.close()
     start_time=Time["total"][0]
     Time["total"] = list(map(lambda x:x-start_time, Time["total"]))
     Time["in"] = list(map(lambda x:x-start_time, Time["in"]))
     Time["out"] = list(map(lambda x:x-start_time, Time["out"]))
 
-    bur = save_burst(burst)
+    
     pktcount = save_PktCount(Count)
-    time_f = save_time(Time)
+    time = save_time(Time)
     ngram=[]
     for n in range(2,7):
         ngram.extend(save_ngram(Size,n))
+    trans = save_transpos(Size)
+    IntervalI = save_intI(Size)
+    IntervalII = save_intII_III(Size)
+    dist = save_dist(Size,Time)
+    bur = save_burst(Size)
+    ht = save_ht(Size)
+    PktSec = save_PktSec(Time,Size)
     
-    return(bur,pktcount,time_f,ngram)
+    return(pktcount,time,ngram,trans,IntervalI,IntervalII_III,dist,bur)
 
 
 
