@@ -14,16 +14,15 @@ import scipy.io
 import math
 import itertools
 
-def cmp(a, b):
-    return (a > b) - (a < b) 
 
-#times = [1,2,3,4,6,5,7]
-sizes = [10,2,5,8,12,20,3]
+Feature_data=[]
+test1 = np.array([0,2,3,4,5])
+test2 = np.array([0,4,9,16,25])
+t1 = [1,2,3]
+t2 = [4,5,6]
+t3 = [7,8,9]
 
-data = pyshark.FileCapture("../data/train/www.osaka-u.ac.jp/1.pcap")
-sizes = list(map(lambda x:x-sizes[0], sizes))
-sizes.extend([1,2,3])
-print(data[4000].sniff_time-data[0].sniff_time)
-print(float(data[4000].sniff_timestamp)-float(data[0].sniff_timestamp))
-#for packet in data:
-#    if "TCP" in packet:
+T = [t1,t2,t3]
+print(T)
+T = list(itertools.chain.from_iterable([t1,t2,t3]))
+print(T)

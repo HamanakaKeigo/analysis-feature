@@ -4,10 +4,10 @@ import numpy as np
 import pickle
 import sys
 import scipy.io
-
+import itertools
 
 def save_burst(Size):
-
+    
     feature = []
     burst = []
     stopped=0
@@ -48,7 +48,7 @@ def save_burst(Size):
         try:
             feature.append(burst[i])
         except:
-            feature.append("X")
+            feature.append(0)
     
     return feature
 
@@ -140,14 +140,15 @@ def save_transpos(Size={}):
                 in_feature.append(i)
 
     for i in range(in_count,300):
-        in_feature.append("X")
+        in_feature.append(0)
     for i in range(out_count,300):
-        out_feature.append("X")
+        out_feature.append(0)
     
     feature.extend(out_feature)
     feature.append(np.std(out_feature))
     feature.append(np.mean(out_feature))
 
+    #print(in_feature)
     feature.extend(in_feature)
     feature.append(np.std(in_feature))
     feature.append(np.mean(in_feature))
@@ -162,7 +163,7 @@ def save_intI(Size):
     in_feature=[]
     out_count=0
     out_pre=0
-    out_feature[]
+    out_feature=[]
 
     for i in range(0,len(Size["total"])):
         if in_count>=300 and out_count>=300:
@@ -180,12 +181,13 @@ def save_intI(Size):
                 in_pre=i
 
     for i in range(in_count,300):
-        in_feature.append("X")
+        in_feature.append(0)
     for i in range(out_count,300):
-        out_feature.append("X")
+        out_feature.append(0)
 
-    feature.append(out_feature)
-    feature.append(in_feature)
+    feature.extend(out_feature)
+    feature.extend(in_feature)
+    return feature
 
 def save_intII_III(Size):
     feature=[]
@@ -220,6 +222,8 @@ def save_intII_III(Size):
     feature.append( sum(interval_freq_in[9:14]))
     feature.extend(interval_freq_in[14:])
 
+    return feature
+
 def save_dist(Size,Time):
     count = 0
     feature=[]
@@ -232,7 +236,7 @@ def save_dist(Size,Time):
             tmp.append(count)
             count = 0
     
-    for i range(len(Size["total"]/30),200)
+    for i in range(int(len(Size["total"])/30),200):
         tmp.append(0)
 
     feature.extend(tmp)
@@ -243,7 +247,7 @@ def save_dist(Size,Time):
 
     bucket = [0]*20
     for i in range(0,200):
-        ib = i/10
+        ib = int(i/10)
         bucket[ib] = bucket[ib] + tmp[i]
     feature.extend(bucket)
     feature.append(np.sum(bucket))
@@ -279,6 +283,90 @@ def save_ht(Size):
 
     return feature
 
+def save_PktSec(Time,Size):
+    feature=[]
+    count = [0]*100
+
+    for i in range(0,len(Size["total"])):
+        t = int( np.floor(Time["total"][i]))
+        if t < 100:
+            count[t] += 1
+    feature.extend(count)
+
+    feature.append( np.mean(count))
+    feature.append( np.std(count))
+    feature.append( np.min(count))
+    feature.append( np.max(count))
+    feature.append( np.median(count))
+    #print(count)
+    bucket = [0] * 20
+    for i in range(0,100):
+        ib = int(i/5)
+        bucket[ib] += count[i]
+    feature.extend(bucket)
+    feature.append(np.sum(bucket))
+    
+    return feature
+
+def save_cumul(Size):
+    feature=[]
+    total=[]
+    cum = []
+    pos=[]
+    neg=[]
+    insize=0
+    outsize=0
+    incount=0
+    outcount=0
+
+    for size in Size["total"]:
+        size = -size
+
+        if size>0:
+            insize += size
+            incount += 1
+
+            if len(cum) == 0:
+                cum.append(size)
+                total.append(size)
+                pos.append(size)
+                neg.append(0)
+            else:
+                cum.append(cum[-1]+size)
+                total.append(total[-1]+abs(size))
+                pos.append(pos[-1]+size)
+                neg.append(neg[-1]+0)
+
+        elif size<0:
+            outsize += abs(size)
+            outcount += 1
+
+            if len(cum) == 0:
+                cum.append(size)
+                total.append(size)
+                pos.append(0)
+                neg.append(size)
+            else:
+                cum.append(cum[-1]+size)
+                total.append(total[-1]+abs(size))
+                pos.append(pos[-1]+0)
+                neg.append(neg[-1]+size)
+
+    feature.append(incount)
+    feature.append(outcount)
+    feature.append(outsize)
+    feature.append(insize)
+    featureCount=100
+
+    posFeatures = np.interp(np.linspace(total[0], total[-1], int(featureCount/2)), total, pos)
+    negFeatures = np.interp(np.linspace(total[0], total[-1], int(featureCount/2)), total, neg)
+    for el in itertools.islice(posFeatures, None):
+        feature.append(el)
+    for el in itertools.islice(negFeatures, None):
+        feature.append(el)
+
+    return feature
+
 
 def get_features(filename = "",ip=""):
 
@@ -287,7 +375,6 @@ def get_features(filename = "",ip=""):
 
     https = 443
     http  = 80
-    burst=[]
     Count={"total":0,"in":0,"out":0}
     Time={"total":[],"in":[],"out":[]}
     Size={"total":[],"in":[],"out":[]}
@@ -311,8 +398,8 @@ def get_features(filename = "",ip=""):
                 Count["in"] += 1
                 Time["total"].append(float(packet.sniff_timestamp))
                 Time["in"].append(float(packet.sniff_timestamp))
-                Size["total"].append(int(packet.length))
-                Size["in"].append(-int(packet.length))
+                Size["total"].append(-int(packet.length))
+                Size["in"].append(int(packet.length))
 
     data.close()
     start_time=Time["total"][0]
@@ -333,8 +420,16 @@ def get_features(filename = "",ip=""):
     bur = save_burst(Size)
     ht = save_ht(Size)
     PktSec = save_PktSec(Time,Size)
-    
-    return(pktcount,time,ngram,trans,IntervalI,IntervalII_III,dist,bur)
+    cumul = save_cumul(Size)
+
+    feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
+    """
+    x=0
+    for f in feature:
+        x += len(f)
+        print(str(x) + " : (" +str(len(f)) + ")")
+    """
+    return(feature)
 
 
 
@@ -356,7 +451,12 @@ if __name__ == "__main__":
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
                     break
                 get = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
-                features.append(get)
+
+                feature=[]
+                for g in get:
+                    feature.extend(g)
+                features.append(feature)
+                print(len(feature))
 
                 print(str(i)+" times of " + s[1])
 
