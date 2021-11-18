@@ -14,8 +14,6 @@ import scipy.io
 
 
 
-
-
 information_leakage=[]
 Feature_data = []
 
@@ -52,20 +50,23 @@ with open("../data/sites",'r') as f1:
 
         fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
         fac = len(fd) ** -0.2
-        width = (fac**2)*np.var(fd,ddof=1)
+        width = abs((fac**2)*np.var(fd,ddof=1))
         bw = 1.06*(width**0.5)
-        print("bw = " + str(bw))
+        if(bw==0):
+            information_leakage.append(0)
+            continue
+        print(str(key) + "th bw = " + str(bw))
         xticks = np.linspace(fd.min()-bw*4, fd.max()+bw*4, 10000)
         Xticks = np.reshape(xticks,(-1,1))
 
         kde = KernelDensity(kernel="gaussian",bandwidth=bw).fit(fd)
         estimate = np.exp(kde.score_samples(Xticks))
 
-        """
+        
         fig = plt.figure()
-        ax1 = fig.add_subplot(111,xlabel="total",ylabel="rate")
+        ax1 = fig.add_subplot(111,xlabel=key,ylabel="rate",label="all")
         ax1.plot(xticks,estimate*len(fd))
-        """
+        
         
 
         Hcf=0
@@ -95,26 +96,29 @@ with open("../data/sites",'r') as f1:
             #print("mutual of " + name + " : " + str(mutual[-1]))
             Hcf+=mutual[-1]
             
-            #ax1.plot(xticks,estimate_s*len(sfd),label=name)
+            ax1.plot(xticks,estimate_s*len(sfd),label=name)
 
-        print("total Hcf : " + str(-Hcf))
-        print("total Hc : " + str(-Hc))
+        #print("total Hcf : " + str(-Hcf))
+        #print("total Hc : " + str(-Hc))
         print("total mutual : "+str(Hcf-Hc))
         information_leakage.append(Hcf-Hc)
-        #plt.legend()
+        plt.legend()
         #plt.show()
-        #fig.savefig("../data/plot/"+str(key)+".png")
-        print("--------------------")
+        fig.savefig("../data/plot/kernel/"+str(key+1)+".png")
+        #print("--------------------")
 
 
 
-print(information_leakage)
+#print(information_leakage)
 test=[]
 #test.append(information_leakage["max"])
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
 ax1.plot(information_leakage)
-plt.legend()
-plt.show()
-fig.savefig("../data/test.png")
+#plt.show()
+fig.savefig("../data/all_data.png")
+
+f = open('../data/plot/origin', 'wb')
+pickle.dump(information_leakage,f)
+f.close()

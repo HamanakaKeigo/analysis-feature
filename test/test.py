@@ -15,14 +15,38 @@ import math
 import itertools
 
 
-Feature_data=[]
-test1 = np.array([0,2,3,4,5])
-test2 = np.array([0,4,9,16,25])
-t1 = [1,2,3]
-t2 = [4,5,6]
-t3 = [7,8,9]
+def cmp(a, b):
+    return (a > b) - (a < b) 
 
-T = [t1,t2,t3]
-print(T)
-T = list(itertools.chain.from_iterable([t1,t2,t3]))
-print(T)
+
+
+data = pyshark.FileCapture("../data/train/www.osaka-u.ac.jp/0.pcap")
+
+https = 443
+http  = 80
+
+Time=[]
+Size=[]
+
+for packet in data:
+    if "TCP" in packet:
+        #to server
+        if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
+            Time.append(float(packet.sniff_timestamp))
+            Size.append(int(packet.length))
+
+        #from server
+        elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
+            Time.append(float(packet.sniff_timestamp))
+            Size.append(-int(packet.length))
+data.close()
+
+for i in range(len(Size)):
+    Size[i] = ( abs(Size[i])//500 )*cmp(Size[i],0)
+
+sizes=[]
+for i in range(len(Size)):
+    for j in range(abs(Size[i])):
+        sizes.append(i)
+print(Size)
+print(sizes)
