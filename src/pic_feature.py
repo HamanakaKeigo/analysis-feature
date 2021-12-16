@@ -6,6 +6,7 @@ import sys
 import scipy.io
 import itertools
 import math
+import csv
 
 def save_burst(Size):
     
@@ -432,29 +433,38 @@ def normalize_data(Time=[],Size=[]):
 
     return new_Time,new_Size
 
-def get_features(filename = "",ip=""):
-
-    #packet size (positive means outgoing and, negative, incoming.)
-    data = pyshark.FileCapture(filename)
+def get_features(filename = ""):
 
     https = 443
     http  = 80
-
     Time=[]
     Size=[]
 
-    for packet in data:
-        if "TCP" in packet:
-            #to server
-            if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-                Time.append(float(packet.sniff_timestamp))
-                Size.append(int(packet.length))
+    if os.path.isfile(filename+".csv"):
+        with open(filename+".csv") as f:
+            data = csv.reader(f)
+    
+            for packet in data:
+                if(packet[0] == "index"):
+                    continue
+                Size.append(int(packet[1]))
+                Time.append(float(packet[2]))
 
-            #from server
-            elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-                Time.append(float(packet.sniff_timestamp))
-                Size.append(-int(packet.length))
-    data.close()
+    else:
+        data = pyshark.FileCapture(filename+".pcap")
+
+        for packet in data:
+            if "TCP" in packet:
+                #to server
+                if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
+                    Time.append(float(packet.sniff_timestamp))
+                    Size.append(int(packet.length))
+
+                #from server
+                elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
+                    Time.append(float(packet.sniff_timestamp))
+                    Size.append(-int(packet.length))
+        data.close()
 
 
     #Time normarize
@@ -489,10 +499,47 @@ def get_features(filename = "",ip=""):
     return(feature)
 
 
+def get_csv(filename = ""):
+    #packet size (positive means outgoing and, negative, incoming.)
+    Time=[]
+    Size=[]
+    with open(filename) as f:
+        reader = csv.reader(f)
+    
+        for packet in reader:
+            if(len(packet)<1):
+                continue
+            Size.append(int(packet[1]))
+            Time.append(float(packet[2]))
 
-if __name__ == "__main__":
-    #args = sys.argv 
 
+    
+    pktcount = save_PktCount(Size)
+    time = save_time(Time,Size)
+    ngram=[]
+    for n in range(2,7):
+        ngram.extend(save_ngram(Size,n))
+    trans = save_transpos(Size)
+    IntervalI = save_intI(Size)
+    IntervalII = save_intII_III(Size)
+    dist = save_dist(Size)
+    bur = save_burst(Size)
+    ht = save_ht(Size)
+    PktSec = save_PktSec(Time,Size)
+    cumul = save_cumul(Size)
+
+    feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
+    """
+    x=0
+    for f in feature:
+        x += len(f)
+        print(str(x) + " : (" +str(len(f)) + ")")
+    """
+    return(feature)
+
+
+
+def pic_mydata():
     train_size=100
 
     with open("../data/sites",'r') as f:
@@ -504,18 +551,18 @@ if __name__ == "__main__":
                 continue
             
             features=[]
-            for i in range(train_size):
+            for i in range(1,train_size):
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
                     break
-                get = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
+                print("../data/train/"+s[1]+"/"+str(i)+".pcap")
+                get = get_features("../data/train/"+s[1]+"/"+str(i))
 
                 feature=[]
                 for g in get:
                     feature.extend(g)
                 features.append(feature)
-                print(len(feature))
 
-                print(str(i)+" times of " + s[1])
+                #print(str(i)+" times of " + s[1])
 
             f = open('../data/features/total/'+s[1], 'wb')
             pickle.dump(features,f)
@@ -524,3 +571,32 @@ if __name__ == "__main__":
             print("get feature of :" + s[1])
 
     #print(site_data)
+
+def pic_anydata():
+    for page in range(12):
+        features=[]
+        for i in range(100):
+            if not os.path.isfile("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv"):
+                break
+            get = get_csv("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv")
+
+            feature=[]
+            for g in get:
+                feature.extend(g)
+            features.append(feature)
+            print(len(feature))
+
+
+            print(str(i)+" times of page" + str(page))
+
+        print(len(features))
+        f = open('../data/features/total/Amazonjp'+str(page), 'wb')
+        pickle.dump(features,f)
+        f.close()
+    
+        print("get feature of : page" + str(page))
+
+if __name__ == "__main__":
+    
+    pic_mydata()
+    #pic_anydata()

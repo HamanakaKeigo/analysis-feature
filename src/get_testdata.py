@@ -3,6 +3,7 @@ import subprocess
 from subprocess import PIPE
 import os
 
+import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -29,9 +30,10 @@ if __name__ == "__main__":
                 if s[0]=="#":
                     continue
 
-                driver = webdriver.Chrome(executable_path="../data/chromedriver",options=option)
+                driver = webdriver.Chrome(options=option)
+                #driver = webdriver.Chrome()
 
-
+                print(s[0])
                 p = subprocess.Popen(['tcpdump','-w', '../data/train/'+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
                 driver.get(s[0])            
                

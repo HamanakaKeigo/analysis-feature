@@ -13,40 +13,32 @@ from scipy.integrate import cumtrapz
 import scipy.io
 import math
 import itertools
+import csv
 
+import chromedriver_binary
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.chrome.options import Options
+import subprocess
+from subprocess import PIPE
 
-def cmp(a, b):
-    return (a > b) - (a < b) 
+filename = "../data/amazon/Amazonjp0/amazonjp000.pcap"
+data = pyshark.FileCapture(filename)
 
+with open('../data/plot/diff.csv') as f:
+    data = list(csv.reader(f))
+    data = np.array(data[1:],dtype=np.float32)
+    #print(data)
 
+    arg=np.argsort(data[:,2])
+    data = data[arg][::-1]
+    print(data)
 
-data = pyshark.FileCapture("../data/train/www.osaka-u.ac.jp/0.pcap")
+    with open('../data/plot/sort_diff.csv',"w") as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+        #print(data)
 
-https = 443
-http  = 80
-
-Time=[]
-Size=[]
-
-for packet in data:
-    if "TCP" in packet:
-        #to server
-        if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-            Time.append(float(packet.sniff_timestamp))
-            Size.append(int(packet.length))
-
-        #from server
-        elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-            Time.append(float(packet.sniff_timestamp))
-            Size.append(-int(packet.length))
-data.close()
-
-for i in range(len(Size)):
-    Size[i] = ( abs(Size[i])//500 )*cmp(Size[i],0)
-
-sizes=[]
-for i in range(len(Size)):
-    for j in range(abs(Size[i])):
-        sizes.append(i)
-print(Size)
-print(sizes)
+    pl = data.transpose()[1]
+    plt.plot(pl)
+    plt.show()
