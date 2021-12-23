@@ -88,7 +88,7 @@ def calc_kernel(sites=[],target=""):
 
             #Feature_data[key][s[1]] = np.reshape(Feature_data[key][s[1]],(-1,1))
 
-    for key in range(3090,len(Feature_data)):
+    for key in range(len(Feature_data)):
         
         fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
         #print(fd.shape)
@@ -154,31 +154,20 @@ def calc_kernel(sites=[],target=""):
 
 if __name__ == "__main__":
     sites = []
-    origin = True
     target = "wpf"
 
-    if(origin):
-        with open("../data/sites",'r') as f1:
-            site_list = f1.readlines()
-            for site in site_list:
-                s = site.split()
-                if s[0] == "#":
-                    continue
-                if (s[2] == target):
-                    sites.append(s[1])
 
+    with open("../data/sites",'r') as f1:
+        site_list = f1.readlines()
+        for site in site_list:
+            s = site.split()
+            if s[0] == "#":
+                continue
+            if (s[2] == target):
+                sites.append(s[1])
 
-    else:
-        for i in range(12):
-            sites.append("Amazonjp"+str(i))
 
     data = calc_kernel(sites,target)
-
-
-
-    #print(information_leakage)
-    test=[]
-    #test.append(information_leakage["max"])
 
     fig = plt.figure()
     ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
@@ -186,12 +175,8 @@ if __name__ == "__main__":
     #plt.show()
     fig.savefig("../data/mix_data.png")
 
-    if(origin):
-        #f = open('../data/plot/feature_info/'+target, 'wb')
-        f = open('../data/plot/feature_info/mix/'+target, 'wb')
-        pickle.dump(data,f)
-        f.close()
-    else:
-        f = open('../data/plot/feature_info/Amazon', 'wb')
-        pickle.dump(data,f)
-        f.close()
+
+    #f = open('../data/plot/feature_info/'+target, 'wb')
+    f = open('../data/plot/feature_info/mix/'+target, 'wb')
+    pickle.dump(data,f)
+    f.close()

@@ -570,7 +570,7 @@ def pic_mydata():
             if s[0] == "#":
                 continue
             features=[]
-            for i in range(1,train_size):
+            for i in range(train_size):
                 if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
                     break
                 print("../data/train/"+s[1]+"/"+str(i)+".pcap")
@@ -588,36 +588,7 @@ def pic_mydata():
             f.close()
         
             print("get feature of :" + s[1])
-
     #print(site_data)
 
-def pic_anydata():
-    for page in range(12):
-        features=[]
-        for i in range(100):
-            if not os.path.isfile("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv"):
-                break
-            get = get_csv("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv")
-
-
-            feature=[]
-            for g in get:
-                feature.extend(g)
-            #print(feature[13:17])
-            features.append(feature)
-            print(len(feature))
-
-
-            print(str(i)+" times of page" + str(page))
-
-        print(len(features))
-        f = open('../data/features/Amazonjp'+str(page), 'wb')
-        pickle.dump(features,f)
-        f.close()
-    
-        print("get feature of : page" + str(page))
-
 if __name__ == "__main__":
-    
     pic_mydata()
-    #pic_anydata()
