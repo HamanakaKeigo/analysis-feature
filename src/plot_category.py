@@ -21,12 +21,13 @@ elif target=="wsf":
     data = pickle.load(open("../data/plot/feature_info/mix/wpf","rb"))
 fig = plt.figure()
 
-
+print(len(data[3:]))
 """
 for i in range(len(data)):
     print(str(i+1) + "th = " + str(data[i]))
 """
 
+"""
 ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
 ax1.plot(range(1,14),data[0:13])
 plt.xlim(1,13)
@@ -139,10 +140,10 @@ ax1.plot(range(3094,3194),data[3093:3193])
 plt.xlim(3094,3194)
 plt.ylim(0,2)
 fig.savefig("../data/plot/category/"+target+"/CDNBurst.png")
-
+"""
 fig = plt.figure()
 ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
-ax1.plot(data)
+ax1.plot(data[3:])
 plt.ylim(0,2)
 fig.savefig("../data/plot/category/"+target+"/All.png")
 #print(data[1365:1380])
