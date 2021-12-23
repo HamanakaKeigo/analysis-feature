@@ -22,23 +22,15 @@ from selenium.webdriver.chrome.options import Options
 import subprocess
 from subprocess import PIPE
 
-filename = "../data/amazon/Amazonjp0/amazonjp000.pcap"
-data = pyshark.FileCapture(filename)
+with open("../data/amazon/amazonjp0/amazonjp000.csv") as f:
+    reader = csv.reader(f)
 
-with open('../data/plot/diff.csv') as f:
-    data = list(csv.reader(f))
-    data = np.array(data[1:],dtype=np.float32)
-    #print(data)
+    Size=[]
+    Time=[]
+    for packet in reader:
+        if(len(packet)<1):
+            continue
+        Size.append(int(packet[1]))
+        Time.append(float(packet[2]))
 
-    arg=np.argsort(data[:,2])
-    data = data[arg][::-1]
-    print(data)
-
-    with open('../data/plot/sort_diff.csv',"w") as f:
-        writer = csv.writer(f)
-        writer.writerows(data)
-        #print(data)
-
-    pl = data.transpose()[1]
-    plt.plot(pl)
-    plt.show()
+print(sum(Time))

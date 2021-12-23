@@ -13,12 +13,12 @@ import math
 import scipy.io
 
 
-target = "WSF"
+target = "wsf"
 
-if target=="WPF":
+if target=="wpf":
     data = pickle.load(open("../data/plot/feature_info/Amazon","rb"))
-elif target=="WSF":
-    data = pickle.load(open("../data/plot/feature_info/wsf","rb"))
+elif target=="wsf":
+    data = pickle.load(open("../data/plot/feature_info/mix/wpf","rb"))
 fig = plt.figure()
 
 
@@ -125,6 +125,20 @@ ax1.plot(range(2940,3044),data[2939:3043])
 plt.xlim(2940,3043)
 plt.ylim(0,2)
 fig.savefig("../data/plot/category/"+target+"/CUMUL.png")
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
+ax1.plot(range(3044,3094),data[3043:3093])
+plt.xlim(3044,3093)
+plt.ylim(0,2)
+fig.savefig("../data/plot/category/"+target+"/CDNBurst.png")
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
+ax1.plot(range(3094,3194),data[3093:3193])
+plt.xlim(3094,3194)
+plt.ylim(0,2)
+fig.savefig("../data/plot/category/"+target+"/CDNBurst.png")
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")

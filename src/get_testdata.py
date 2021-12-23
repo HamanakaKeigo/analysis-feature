@@ -2,6 +2,7 @@ import time
 import subprocess
 from subprocess import PIPE
 import os
+import time
 
 import chromedriver_binary
 from selenium import webdriver
@@ -18,8 +19,8 @@ if __name__ == "__main__":
             s = site.split()
             if s[0]=="#":
                 continue
-            if not os.path.exists("../data/train/"+s[1]):
-                os.mkdir("../data/train/"+s[1])
+            if not os.path.exists("../data/train/lib/"+s[1]):
+                os.mkdir("../data/train/lib/"+s[1])
         
         option = Options()
         option.add_argument("--headless")
@@ -33,11 +34,12 @@ if __name__ == "__main__":
                 driver = webdriver.Chrome(options=option)
                 #driver = webdriver.Chrome()
 
-                print(s[0])
-                p = subprocess.Popen(['tcpdump','-w', '../data/train/'+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
-                driver.get(s[0])            
+                print(s[1])
+                p = subprocess.Popen(['tcpdump','-w', '../data/train/lib/'+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
+                driver.get(s[0])     
+                time.sleep(5)       
                
-                p.kill()
+                p.terminate()
                 driver.delete_all_cookies()
                 driver.quit()
                 

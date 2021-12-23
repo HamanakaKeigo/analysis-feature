@@ -21,11 +21,37 @@ def calc_kernel(sites=[],target=""):
 
     for site in sites:
 
-        with open("../data/features/total/"+site,"rb") as feature_set:
+
+        #default
+        with open("../data/features/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
-
+            
             for i in range(len(data)):
+                if(i==50):
+                    break
+                for j in range(len(data[i])):
+
+                    
+                    if(len(Feature_data)<=j):
+                        Feature_data.append({})
+                    if site not in Feature_data[j]:
+                        Feature_data[j][site] = []
+                    if "all" not in Feature_data[j]:
+                        Feature_data[j]["all"] = []
+
+                    Feature_data[j][site].append(data[i][j])
+                    Feature_data[j]["all"].append(data[i][j])
+
+        
+        #ordins
+        with open("../data/features/ordins/"+site,"rb") as feature_set:
+            data = pickle.load(feature_set)
+            #[site][feature] >> [feature][site]
+            
+            for i in range(len(data)):
+                if(i==25):
+                    break
                 for j in range(len(data[i])):
 
                     if(len(Feature_data)<=j):
@@ -38,14 +64,34 @@ def calc_kernel(sites=[],target=""):
                     Feature_data[j][site].append(data[i][j])
                     Feature_data[j]["all"].append(data[i][j])
 
+        #lib
+        with open("../data/features/lib/"+site,"rb") as feature_set:
+            data = pickle.load(feature_set)
+            #[site][feature] >> [feature][site]
+            
+            for i in range(len(data)):
+                if(i==25):
+                    break
+                for j in range(len(data[i])):
 
+                    if(len(Feature_data)<=j):
+                        Feature_data.append({})
+                    if site not in Feature_data[j]:
+                        Feature_data[j][site] = []
+                    if "all" not in Feature_data[j]:
+                        Feature_data[j]["all"] = []
+
+                    Feature_data[j][site].append(data[i][j])
+                    Feature_data[j]["all"].append(data[i][j])
+
+        
 
             #Feature_data[key][s[1]] = np.reshape(Feature_data[key][s[1]],(-1,1))
 
-
-    for key in range(len(Feature_data)):
-
+    for key in range(3090,len(Feature_data)):
+        
         fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
+        #print(fd.shape)
         fac = len(fd) ** -0.2
         width = abs((fac**2)*np.var(fd,ddof=1))
         if(width==0):
@@ -58,21 +104,25 @@ def calc_kernel(sites=[],target=""):
 
         kde = KernelDensity(kernel="gaussian",bandwidth=bw).fit(fd)
         estimate = np.exp(kde.score_samples(Xticks))
-
+        #print(Xticks)
+        #print(len(fd))
         
         fig = plt.figure()
         ax1 = fig.add_subplot(111,xlabel=key,ylabel="rate",label="all")
         ax1.plot(xticks,estimate*len(fd))
+
     
-    
+        #print(estimate)
 
         Hcf=0
         Hc=0
         for site in sites:
         
             sfd = np.array(Feature_data[key][site]).reshape(-1,1)
+            #print(sfd)
             kde_s = KernelDensity(kernel="gaussian",bandwidth=bw).fit(sfd)
             estimate_s = np.exp(kde_s.score_samples(Xticks))
+            
             #print(site +" of len : " + str(len(Feature_data[site])))
 
             rate = len(sfd)/len(fd)
@@ -97,28 +147,30 @@ def calc_kernel(sites=[],target=""):
         information_leakage.append(Hcf-Hc)
         plt.legend()
         #plt.show()
-        fig.savefig("../data/plot/kernel/"+target+"/"+str(key+1)+".png")
+        fig.savefig("../data/plot/kernel/"+target+"/mix/"+str(key+1)+".png")
         print("--------------------")
     return(information_leakage)
 
 
 if __name__ == "__main__":
     sites = []
-    target = "WSF"
+    origin = True
+    target = "wpf"
 
-    if(target == "WSF"):
+    if(origin):
         with open("../data/sites",'r') as f1:
             site_list = f1.readlines()
             for site in site_list:
                 s = site.split()
                 if s[0] == "#":
                     continue
-                sites.append(s[1])
+                if (s[2] == target):
+                    sites.append(s[1])
 
-    elif(target == "WPF"):
+
+    else:
         for i in range(12):
             sites.append("Amazonjp"+str(i))
-
 
     data = calc_kernel(sites,target)
 
@@ -132,13 +184,14 @@ if __name__ == "__main__":
     ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
     ax1.plot(data)
     #plt.show()
-    fig.savefig("../data/all_data.png")
+    fig.savefig("../data/mix_data.png")
 
-    if(target == "WSF"):
-        f = open('../data/plot/feature_info/wsf', 'wb')
+    if(origin):
+        #f = open('../data/plot/feature_info/'+target, 'wb')
+        f = open('../data/plot/feature_info/mix/'+target, 'wb')
         pickle.dump(data,f)
         f.close()
-    elif(target == "WPF"):
-        f = open('../data/plot/feature_info/wpf', 'wb')
+    else:
+        f = open('../data/plot/feature_info/Amazon', 'wb')
         pickle.dump(data,f)
         f.close()
