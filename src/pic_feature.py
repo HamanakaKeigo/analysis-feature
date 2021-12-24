@@ -517,12 +517,15 @@ def get_features(filename = ""):
                 #to server
                 if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
                     Size.append(int(packet.length))
+
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
                 #from server
                 elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
                     Size.append(-int(packet.length))
 
-                IP.append(packet.ip.host)
-                Time.append(float(packet.sniff_timestamp))
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
         data.close()
 
 
@@ -560,7 +563,7 @@ def get_csv(filename = ""):
 
 
 def pic_mydata():
-    train_size=100
+    train_size=2
 
     with open("../data/sites",'r') as f:
         sites = f.readlines()

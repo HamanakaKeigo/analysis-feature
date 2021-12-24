@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 
 if __name__ == "__main__":
 
-    test_epoch = 100
+    test_epoch = 40
 
     with open("../data/sites",'r') as f:
         sites = f.readlines()
@@ -36,8 +36,7 @@ if __name__ == "__main__":
 
                 print(s[1])
                 p = subprocess.Popen(['tcpdump','-w', '../data/train/lib/'+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
-                driver.get(s[0])     
-                time.sleep(5)       
+                driver.get(s[0])          
                
                 p.terminate()
                 driver.delete_all_cookies()
