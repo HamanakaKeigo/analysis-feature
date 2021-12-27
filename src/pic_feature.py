@@ -517,12 +517,14 @@ def get_features(filename = ""):
                 #to server
                 if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
                     Size.append(int(packet.length))
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
                 #from server
                 elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
                     Size.append(-int(packet.length))
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
 
-                IP.append(packet.ip.host)
-                Time.append(float(packet.sniff_timestamp))
         data.close()
 
 
@@ -571,10 +573,10 @@ def pic_mydata():
                 continue
             features=[]
             for i in range(train_size):
-                if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
+                if not os.path.isfile("../data/train/odins/"+s[1]+"/"+str(i)+".pcap"):
                     break
                 print("../data/train/"+s[1]+"/"+str(i)+".pcap")
-                get = get_features("../data/train/"+s[1]+"/"+str(i))
+                get = get_features("../data/train/odins/"+s[1]+"/"+str(i))
 
                 feature=[]
                 for g in get:

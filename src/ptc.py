@@ -54,8 +54,8 @@ if __name__ == "__main__":
 
             features=[]
             for i in range(train_size):
-                if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
+                if not os.path.isfile("../data/train/odins/"+s[1]+"/"+str(i)+".pcap"):
                     break
                 #print("../data/train/"+s[1]+"/"+str(i)+".pcap")
-                to_csv("../data/train/"+s[1]+"/"+str(i))
+                to_csv("../data/train/odins/"+s[1]+"/"+str(i))
 
