@@ -34,6 +34,7 @@ def save_fig(history):
     ax2.legend(['Train loss','valid loss'], loc='upper right')
     #ax2.show()
     plt.savefig("../data/train_loss.png")
+    print(max(history.history['val_accuracy']))
 
 def make_feature(get=[]):
     
@@ -41,16 +42,16 @@ def make_feature(get=[]):
     for g in get:
         fset.extend(g)
 
-    
+    """
     data = pickle.load(open("../data/plot/feature_info/mix/wpf","rb"))
     data = np.array(data)
     arg = np.argsort(data)
     fset = np.array(fset)[arg]
     fset = fset[::-1]
     feature = fset[:100]
-    
+    """
 
-    #feature = fset[2943:3043]
+    feature = fset[50:100]
     #feature = get[-1]
     return feature
 
@@ -165,27 +166,26 @@ def build_cumul(train_set,valid_set,page=0):
 def build_neural(train_set,valid_set,page=0):
     ###build neural net###
 
+    #print(train_set[0])
     input_shape = len(train_set[0][0])
     print(input_shape)
-    #print(input_shape)
     inputs = Input(shape=(input_shape,)) 
 
-    x = Conv1D(16,10,input_shape=(None,input_shape))(inputs)
-    x = Dense(64)(x)
-    
-    x = BatchNormalization()(x)
-    x = Activation("relu")(x)
-    x = Dropout(0.2)(x)
-    #x = Model(inputs=inputs, outputs=x)
 
-    """
-    y = Dense(128)(x)
-    y = BatchNormalization()(y)
-    y = Activation("relu")(y)
-    #y = Dense(512,activation="relu")(y)
-    #y = Dense(128,activation="relu")(y)
+    #x = Dense(16,activation="relu")(inputs)
+    #x = BatchNormalization()(x)
+    #x = Activation("relu")(x)
+    #x = Dropout(0.2)(x)
+
+    y = Dense(64,activation="relu")(inputs)
+    y = Dense(128,activation="relu")(y)
+    #y = Dropout(0.2)(y)
+    y = Dense(64,activation="relu")(y)
+
+
+
     y = Dense(page,activation="softmax")(y)
-    """
+    
 
     model = Model(inputs=inputs,outputs=y)
     model.compile(optimizer='adam', 
@@ -201,7 +201,7 @@ def build_neural(train_set,valid_set,page=0):
 
     #print("ts : "+str(pos.shape)+" tf : "+str(neg.shape)+" tl : "+str(cl.shape))
     #print("ts : "+str(len(pos))+" tf : "+str(len(neg))+" tl : "+str(len(cl)))
-    history=model.fit(tr_in, tr_lab, epochs=5000,validation_data=(val_in,val_lab))
+    history=model.fit(tr_in, tr_lab, epochs=1000,validation_data=(val_in,val_lab))
     model.save("../data/trained_model")
 
     save_fig(history)
@@ -241,75 +241,68 @@ def get_data(origin=True):
     train_data = []
     valid_data = []
 
-    if origin:
-        train_size=100
-        valid_size=30
-        with open("../data/sites",'r') as f:
-            sites = f.readlines()
-            page=0
-            for site in sites:
 
-                s = site.split()
-                if s[0] == "#":
-                    continue
-                
-                features=[]
-                for i in range(train_size):
-                    if(i<50):
-                        if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/"+s[1]+"/"+str(i))
-                    elif(i<75):
-                        if not os.path.isfile("../data/train/ordins/"+s[1]+"/"+str(i-50)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/ordins/"+s[1]+"/"+str(i-50))
-                    else:
-                        if not os.path.isfile("../data/train/lib/"+s[1]+"/"+str(i-75)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/lib/"+s[1]+"/"+str(i-75))
-                    train_set = []
-
-                    train_set.append(make_feature(get))
-                    train_set.append(np.array(page))
-                    train_data.append(np.array(train_set))
-
-                for i in range(valid_size):
-                    if(i<10):
-                        if not os.path.isfile("../data/train/"+s[1]+"/"+str(99-i)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/"+s[1]+"/"+str(99-i))
-                    elif(i<20):
-                        x = i-20
-                        if not os.path.isfile("../data/train/ordins/"+s[1]+"/"+str(99-x)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/ordins/"+s[1]+"/"+str(99-x))
-                    else:
-                        x=i-20
-                        if not os.path.isfile("../data/train/lib/"+s[1]+"/"+str(39-x)+".pcap"):
-                            break
-                        get = pic.get_features("../data/train/lib/"+s[1]+"/"+str(39-x))
-                    valid_set = []
-
-                    valid_set.append(make_feature(get))
-                    valid_set.append(np.array(page))
-                    valid_data.append(np.array(valid_set))
-                page+=1
-    else:
+    train_size=100
+    valid_size=40
+    with open("../data/sites",'r') as f:
+        sites = f.readlines()
         page=0
-        while(True):
-            if not os.path.isdir("../data/amazon/Amazonjp"+str(page)):
-                break
-            for i in range(100):
-                if not os.path.isfile("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv"):
-                    break
-                get = pic.get_csv("../data/amazon/Amazonjp"+str(page)+"/amazonjp"+str(page)+f'{i:02}'+".csv")
-                
+        for site in sites:
+
+            s = site.split()
+            if s[0] == "#":
+                continue
+            
+            features=[]
+            for i in range(train_size):
+                if(i<25):
+                    if not os.path.isfile("../data/train/yhome/"+s[1]+"/"+str(i)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/yhome/"+s[1]+"/"+str(i))
+                elif(i<50):
+                    if not os.path.isfile("../data/train/icn/"+s[1]+"/"+str(i-25)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/icn/"+s[1]+"/"+str(i-25))
+                elif(i<75):
+                    if not os.path.isfile("../data/train/odins/"+s[1]+"/"+str(i-50)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/odins/"+s[1]+"/"+str(i-50))
+                else:
+                    if not os.path.isfile("../data/train/lib/"+s[1]+"/"+str(i-75)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/lib/"+s[1]+"/"+str(i-75))
                 train_set = []
+
                 train_set.append(make_feature(get))
                 train_set.append(np.array(page))
                 train_data.append(np.array(train_set))
-                #print(len(feature))
-            page += 1
+
+            for i in range(valid_size):
+                if(i<10):
+                    if not os.path.isfile("../data/train/yhome/"+s[1]+"/"+str(25+i)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/yhome/"+s[1]+"/"+str(25+i))
+                elif(i<20):
+                    if not os.path.isfile("../data/train/icn/"+s[1]+"/"+str(99-i)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/icn/"+s[1]+"/"+str(99-i))
+                elif(i<30):
+                    x = i-20
+                    if not os.path.isfile("../data/train/odins/"+s[1]+"/"+str(99-x)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/odins/"+s[1]+"/"+str(99-x))
+                else:
+                    x=i-20
+                    if not os.path.isfile("../data/train/lib/"+s[1]+"/"+str(39-x)+".pcap"):
+                        break
+                    get = pic.get_features("../data/train/lib/"+s[1]+"/"+str(39-x))
+                valid_set = []
+
+                valid_set.append(make_feature(get))
+                valid_set.append(np.array(page))
+                valid_data.append(np.array(valid_set))
+            page+=1
+
 
     train_data=np.array(train_data)
     valid_data=np.array(valid_data)
@@ -339,18 +332,18 @@ if __name__ == "__main__":
     #print(data_set)
     #train_set,valid_set = split_data(data_set)
     
-    """
+    
     train_set,valid_set,page = get_data(True) #origin = True
     dataset=np.array([train_set,valid_set,page])
     np.save('../data/features/dataset',dataset)
+    
+    
     """
-    
-    
     data = np.load('../data/features/dataset.npy',allow_pickle=True)
     train_set = data[0]
     valid_set = data[1]
     page = data[2]
-    
+    """
 
     model,norm = build_neural(train_set,valid_set,page)
     #model,norm = build_cumul(train_set,valid_set,page)

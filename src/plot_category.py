@@ -13,15 +13,13 @@ import math
 import scipy.io
 
 
-target = "wsf"
+target = "wpf"
 
-if target=="wpf":
-    data = pickle.load(open("../data/plot/feature_info/Amazon","rb"))
-elif target=="wsf":
-    data = pickle.load(open("../data/plot/feature_info/mix/wpf","rb"))
+
+data = pickle.load(open("../data/plot/feature_info/"+target,"rb"))
 fig = plt.figure()
 
-print(len(data[3:]))
+
 """
 for i in range(len(data)):
     print(str(i+1) + "th = " + str(data[i]))
@@ -139,12 +137,51 @@ ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
 ax1.plot(range(3094,3194),data[3093:3193])
 plt.xlim(3094,3194)
 plt.ylim(0,2)
-fig.savefig("../data/plot/category/"+target+"/CDNBurst.png")
+fig.savefig("../data/plot/category/"+target+"/Time100.png")
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
+ax1.plot(range(3194,3205),data[3193:3204])
+plt.xlim(3194,3204)
+plt.ylim(0,2)
+fig.savefig("../data/plot/category/"+target+"/inburst.png")
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
+ax1.plot(range(3205,3430),data[3204:3430])
+plt.xlim(3204,3429)
+plt.ylim(0,2)
+fig.savefig("../data/plot/category/"+target+"/inDist.png")
+"""
+
+fig.set_figheight(5)
+fig.set_figwidth(8)
+#plt.rcParams['figure.subplot.bottom'] = 0.5
+ax1 = fig.add_subplot(111,xlabel="feature index",ylabel="information leakage")
+ax1.plot(data[0:50],label="CUMUL")
+plt.ylim(0,1.5)
+
+#ax2 = fig.add_subplot(132,xlabel="index",label="CDNburst")
+ax1.plot(data[50:100],label="CDNburst")
+
+#ax3 = fig.add_subplot(133,xlabel="index",label="timesplit")
+ax1.plot(data[200:250],label="Time cumul")
+
+plt.xlabel("feature index",fontsize=17)
+plt.ylabel("information leakage",fontsize=17)
+plt.legend(fontsize=17)
+plt.tick_params(labelsize=17)
+plt.tight_layout()
+
+plt.show()
+fig.savefig("../data/plot/evaluate.png")
+
 """
 fig = plt.figure()
 ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
-ax1.plot(data[3:])
+ax1.plot(data)
 plt.ylim(0,2)
 fig.savefig("../data/plot/category/"+target+"/All.png")
+"""
 #print(data[1365:1380])
 

@@ -11,7 +11,8 @@ from selenium.webdriver.chrome.options import Options
 
 if __name__ == "__main__":
 
-    test_epoch = 100
+    test_epoch = 40
+    loc = "icn"
 
     with open("../data/sites",'r') as f:
         sites = f.readlines()
@@ -19,8 +20,8 @@ if __name__ == "__main__":
             s = site.split()
             if s[0]=="#":
                 continue
-            if not os.path.exists("../data/train/lib/"+s[1]):
-                os.mkdir("../data/train/lib/"+s[1])
+            if not os.path.exists("../data/train/"+loc+"/"+s[1]):
+                os.mkdir("../data/train/"+loc+"/"+s[1])
         
         option = Options()
         option.add_argument("--headless")
@@ -35,9 +36,8 @@ if __name__ == "__main__":
                 #driver = webdriver.Chrome()
 
                 print(s[1])
-                p = subprocess.Popen(['tcpdump','-w', '../data/train/lib/'+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
-                driver.get(s[0])     
-                time.sleep(5)       
+                p = subprocess.Popen(['tcpdump','-w', '../data/train/'+loc+"/"+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
+                driver.get(s[0])          
                
                 p.terminate()
                 driver.delete_all_cookies()

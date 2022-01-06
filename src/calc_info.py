@@ -23,7 +23,7 @@ def calc_kernel(sites=[],target=""):
 
 
         #default
-        with open("../data/features/"+site,"rb") as feature_set:
+        with open("../data/features/icn/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
             
@@ -45,7 +45,7 @@ def calc_kernel(sites=[],target=""):
 
         
         #ordins
-        with open("../data/features/ordins/"+site,"rb") as feature_set:
+        with open("../data/features/odins/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
             
@@ -147,7 +147,7 @@ def calc_kernel(sites=[],target=""):
         information_leakage.append(Hcf-Hc)
         plt.legend()
         #plt.show()
-        fig.savefig("../data/plot/kernel/"+target+"/mix/"+str(key+1)+".png")
+        fig.savefig("../data/plot/kernel/"+target+"/"+str(key+1)+".png")
         print("--------------------")
     return(information_leakage)
 
@@ -173,10 +173,10 @@ if __name__ == "__main__":
     ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
     ax1.plot(data)
     #plt.show()
-    fig.savefig("../data/mix_data.png")
+    fig.savefig("../data/"+target+"_data.png")
 
 
     #f = open('../data/plot/feature_info/'+target, 'wb')
-    f = open('../data/plot/feature_info/mix/'+target, 'wb')
+    f = open('../data/plot/feature_info/'+target, 'wb')
     pickle.dump(data,f)
     f.close()
