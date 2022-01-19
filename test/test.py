@@ -84,7 +84,7 @@ def calc_kernel(sites=[],target=""):
     #weight[50:] = 0
     kde = gaussian_kde(data,bw_method="silverman",weights=weight)
     bw = np.sqrt(kde.covariance)
-    print(kde.evaluate([100000,400000,600000]))
+    #print(kde.evaluate([100000,400000,600000]))
     print(bw)
     xticks = np.linspace(data[0].min(), data[0].max(), 100)
     yticks = np.linspace(data[1].min(), data[1].max(), 100)
