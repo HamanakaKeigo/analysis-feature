@@ -26,6 +26,21 @@ def calc(filename):
         sizes.append(data[0])
 
     fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(times,sizes)
+    #plt.show()
+
+    dataset = [times,sizes]
+    kde = gaussian_kde(dataset)
+
+    x = np.linspace(min(times)-1, max(times)+1, 50)
+    y = np.linspace(min(sizes)-10000, max(sizes)+10000, 50)
+    xx,yy = np.meshgrid(x,y)
+    meshdata = np.vstack([xx.ravel(),yy.ravel()])
+    z = kde.evaluate(meshdata)
+
+    ax.contourf(xx,yy,z.reshape(len(y),len(x)),alpha=0.5)
+    plt.show()
 
 
     print("calc")
