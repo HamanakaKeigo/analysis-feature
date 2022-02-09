@@ -8,7 +8,6 @@ import pickle
 import matlab
 from scipy import integrate
 from scipy.integrate import cumtrapz
-import sympy as sym
 import math
 
 

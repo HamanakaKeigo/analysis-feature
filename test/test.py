@@ -1,52 +1,65 @@
-import pyshark
-import os
-import numpy as np
-import pickle
-import sys
-from scipy import integrate
+from scipy.stats import gaussian_kde
+from scipy.stats import norm
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats.distributions import norm
-from sklearn.neighbors import KernelDensity
-import seaborn as sns
+import pickle
+import matlab
+from scipy import integrate
 from scipy.integrate import cumtrapz
-import scipy.io
 import math
-import itertools
+import scipy.io
+import csv
 
 
-def cmp(a, b):
-    return (a > b) - (a < b) 
+information_leakage=[]
+Feature_data = []
+
+
+def calc(filename):
+    file = open(filename, 'rb')
+    datas = pickle.load(file)
+
+    times = []
+    sizes = []
+    for data in datas:
+        times.append(data[1])
+        sizes.append(data[0])
+
+    fig = plt.figure()
+
+
+    print("calc")
+
+
+def pic(filename):
+    #data = pyshark.FileCapture(filename)
+    file = open(filename, 'rb')
+    data = pickle.load(file)
+
+    all_size = 0
+    first_time=0
+    
+    for i,packet in enumerate(data):
+        all_size += int(packet[2])
+
+    all_time = data[-1][1] - data[0][1]
+    file.close()
+    save=[all_size,all_time]
+    return save
 
 
 
-data = pyshark.FileCapture("../data/train/www.osaka-u.ac.jp/0.pcap")
+if __name__ == "__main__":
 
-https = 443
-http  = 80
+    datas = []
+    c = False
+    if(c):
+        for i in range(10):
+            filename = "../data/train/www.amazon.co.jp/"+str(i)+".pickle"
+            datas.append(pic(filename))
 
-Time=[]
-Size=[]
-
-for packet in data:
-    if "TCP" in packet:
-        #to server
-        if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-            Time.append(float(packet.sniff_timestamp))
-            Size.append(int(packet.length))
-
-        #from server
-        elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-            Time.append(float(packet.sniff_timestamp))
-            Size.append(-int(packet.length))
-data.close()
-
-for i in range(len(Size)):
-    Size[i] = ( abs(Size[i])//500 )*cmp(Size[i],0)
-
-sizes=[]
-for i in range(len(Size)):
-    for j in range(abs(Size[i])):
-        sizes.append(i)
-print(Size)
-print(sizes)
+        f = open('../data/plot/data', 'wb')
+        pickle.dump(datas,f)
+        f.close()
+    
+    calc('../data/plot/data')
