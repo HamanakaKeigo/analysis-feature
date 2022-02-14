@@ -13,7 +13,6 @@ import sys
 sys.path.append('../')
 from my_scipy.stats import gaussian_kde
 from my_scipy.stats import norm
-from gauss_kde import gauss
 #print(sys.path)
 
 
@@ -45,31 +44,40 @@ def calc_kernel(sites=[],target=""):
                     Feature_data[j][site].append(data[i][j])
                     Feature_data[j]["all"].append(data[i][j])
         
+    #データ選択
+    """
     data=[]
     for i in range(3):
         data.append(Feature_data[i]["all"])
     data = np.array(data)
-    #print(data.shape)
+    """
+    data = Feature_data[0]["all"]
+    data1 = Feature_data[0]["Amazon0"]
 
-    
-    weight = [1]*len(data[0])
-    kde = gaussian_kde(data,bw_method="silverman",weights=weight)
-    #print("inv_conv =\n",kde.inv_cov)
-    print(kde.covariance)
-
+    xticks = np.linspace(min(data), max(data), 100)
     #xx,yy = np.meshgrid(xticks,yticks)
     #mesh = np.vstack([xx.ravel(),yy.ravel()])
-    plot = [0]*3
-    plot[2] += 1
-    z = kde.evaluate(plot)
-    print(z)
+
+    #グラフの準備
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
     
-    #fig = plt.figure()
-    #ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
+    kde = gaussian_kde(data,bw_method="silverman")
+    z = kde(xticks)
+    ax1.plot(xticks,z*len(data),color="k")
+    ax1.scatter(data,[0]*len(data))
+
+    for site in sites:
+        kde1 = gaussian_kde(Feature_data[0][site],cov_inv=[kde.inv_cov,kde.covariance])
+        z1 = kde1(xticks)
+        ax1.plot(xticks,z1*len(Feature_data[0][site]))
+        #ax1.scatter(data1,[0]*len(data1))
+    
+
     #ax1.scatter(estimatex,estimatey)
     #ax1.scatter(fd,sd)
     #ax1.contourf(xx,yy,z.reshape(len(yticks),len(xticks)),cmap="Blues", alpha=0.5)
-    #plt.show()
+    plt.show()
     
     return(information_leakage)
 
