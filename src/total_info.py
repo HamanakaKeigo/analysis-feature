@@ -1,5 +1,3 @@
-from scipy.stats import gaussian_kde
-from scipy.stats import norm
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
 import numpy as np
@@ -11,6 +9,12 @@ from scipy.integrate import cumtrapz
 import sympy as sym
 import math
 import scipy.io
+import sys 
+sys.path.append('../')
+from my_scipy.stats import gaussian_kde
+from my_scipy.stats import norm
+from gauss_kde import gauss
+#print(sys.path)
 
 
 def calc_kernel(sites=[],target=""):
@@ -47,8 +51,10 @@ def calc_kernel(sites=[],target=""):
     data = np.array(data)
     #print(data.shape)
 
-
-    kde = gaussian_kde(data,bw_method="silverman")
+    
+    weight = [1]*len(data[0])
+    kde = gaussian_kde(data,bw_method="silverman",weights=weight)
+    #print("inv_conv =\n",kde.inv_cov)
     print(kde.covariance)
 
     #xx,yy = np.meshgrid(xticks,yticks)
