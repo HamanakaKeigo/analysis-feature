@@ -168,6 +168,7 @@ if __name__ == "__main__":
 
 
     data = calc_kernel(sites,target)
+    print(data)
 
     fig = plt.figure()
     ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
