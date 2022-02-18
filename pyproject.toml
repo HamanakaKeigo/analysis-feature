@@ -5,7 +5,11 @@ description = ""
 authors = ["HamanakaKeigo <k-hamanaka@ist.osaka-u.ac.jp>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.10"
+scipy = "1.6.2"
+matlab = "0.1"
+matplotlib = "3.4.1"
+pyshark = "0.4.3"
 
 [tool.poetry.dev-dependencies]
 

@@ -6,8 +6,9 @@ import matlab
 import math
 import sys 
 import csv
-from scipy import integrate
+
 sys.path.append('../')
+from my_scipy import integrate
 from my_scipy.stats import gaussian_kde
 from my_scipy.stats import norm
 #print(sys.path)
@@ -183,7 +184,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    dim = 3 #(参照する変数の数)
+    dim = 2 #(参照する変数の数)
     data = []
     min_box = []
     max_box = []
