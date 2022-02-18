@@ -10,13 +10,13 @@ from numpy import (isscalar, r_, log, around, unique, asarray,
 
 from scipy import optimize
 from scipy import special
-from . import statlib
-from . import stats
-from .stats import find_repeats, _contains_nan
-from .contingency import chi2_contingency
-from . import distributions
-from ._distn_infrastructure import rv_generic
-from ._hypotests import _get_wilcoxon_distr
+from scipy.stats import statlib
+from scipy.stats import stats
+from scipy.stats.stats import find_repeats, _contains_nan
+from scipy.stats.contingency import chi2_contingency
+from scipy.stats import distributions
+from scipy.stats._distn_infrastructure import rv_generic
+from scipy.stats._hypotests import _get_wilcoxon_distr
 
 
 __all__ = ['mvsdist',

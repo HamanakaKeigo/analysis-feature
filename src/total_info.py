@@ -1,4 +1,4 @@
-from sklearn.neighbors import KernelDensity
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -8,9 +8,8 @@ import sys
 import csv
 
 sys.path.append('../')
-from my_scipy import integrate
+from scipy import integrate
 from my_scipy.stats import gaussian_kde
-from my_scipy.stats import norm
 #print(sys.path)
 
 

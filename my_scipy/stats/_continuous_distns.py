@@ -18,9 +18,9 @@ from scipy import interpolate
 import scipy.special as sc
 import scipy.special._ufuncs as scu
 from scipy._lib._util import _lazyselect, _lazywhere
-from . import _stats
-from ._rvs_sampling import rvs_ratio_uniforms
-from ._tukeylambda_stats import (tukeylambda_variance as _tlvar,
+from scipy.stats import _stats
+from scipy.stats._rvs_sampling import rvs_ratio_uniforms
+from scipy.stats._tukeylambda_stats import (tukeylambda_variance as _tlvar,
                                  tukeylambda_kurtosis as _tlkurt)
 from ._distn_infrastructure import (
     get_distribution_names, _kurtosis, _ncx2_cdf, _ncx2_log_pdf, _ncx2_pdf,

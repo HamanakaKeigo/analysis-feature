@@ -177,14 +177,14 @@ from scipy._lib._util import (_lazywhere, check_random_state, MapWrapper,
                               rng_integers, float_factorial)
 import scipy.special as special
 from scipy import linalg
-from . import distributions
-from . import mstats_basic
-from ._stats_mstats_common import (_find_repeats, linregress, theilslopes,
+from scipy.stats import distributions
+from scipy.stats import mstats_basic
+from scipy.stats._stats_mstats_common import (_find_repeats, linregress, theilslopes,
                                    siegelslopes)
-from ._stats import (_kendall_dis, _toint64, _weightedrankedtau,
+from scipy.stats._stats import (_kendall_dis, _toint64, _weightedrankedtau,
                      _local_correlations)
-from ._rvs_sampling import rvs_ratio_uniforms
-from ._hypotests import epps_singleton_2samp, cramervonmises
+from scipy.stats._rvs_sampling import rvs_ratio_uniforms
+from scipy.stats._hypotests import epps_singleton_2samp, cramervonmises
 
 
 __all__ = ['find_repeats', 'gmean', 'hmean', 'mode', 'tmean', 'tvar',

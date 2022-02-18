@@ -12,8 +12,8 @@ from scipy.linalg.blas import drot
 from scipy.linalg.misc import LinAlgError
 from scipy.linalg.lapack import get_lapack_funcs
 
-from ._discrete_distns import binom
-from . import mvn
+from scipy.stats._discrete_distns import binom
+from scipy.stats import mvn
 
 __all__ = ['multivariate_normal',
            'matrix_normal',
