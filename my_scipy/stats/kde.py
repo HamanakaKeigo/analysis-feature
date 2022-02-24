@@ -577,8 +577,8 @@ class gaussian_kde(object):
 
         self.covariance = self._data_covariance * self.factor**2
         self.inv_cov = self._data_inv_cov / self.factor**2
-        L = linalg.cholesky(self.covariance*2*pi)
-        self.log_det = 2*np.log(np.diag(L)).sum()
+        #L = linalg.cholesky(self.covariance*2*pi)
+        #self.log_det = 2*np.log(np.diag(L)).sum()
 
     def pdf(self, x):
         """

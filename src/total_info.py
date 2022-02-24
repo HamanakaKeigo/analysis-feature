@@ -6,11 +6,12 @@ import matlab
 import math
 import sys 
 import csv
+import time
+import cProfile
 
 sys.path.append('../')
 from my_scipy import integrate
 from my_scipy.stats import gaussian_kde
-from my_scipy.stats import norm
 #print(sys.path)
 
 
@@ -127,6 +128,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
     minx = min(data) - (max(data)-min(data))/2
     maxx = max(data) + (max(data)-min(data))/2
     xticks = np.linspace(minx, maxx, 1000)
+    print(minx,maxx)
     
     z = kde(xticks)
     ax1.plot(xticks,z*len(data),color="k")
@@ -135,6 +137,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
     Hcf = 0
     Hc = 0
+    integral = lambda x: kde(x) * (( kde1(x)*len(data1) )/( kde(x)*len(data)  )) * np.log2(( kde1(x)*len(data1) )/( kde(x)*len(data) )) if (kde(x)>0 and kde1(x)>0) else 0
     for site in sites:
         data1 = Feature_data[id][site]
         if len(data1)==0:
@@ -151,7 +154,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         #minx = min(data1) - (max(data1)-min(data1))
         #maxx = max(data1) + (max(data1)-min(data1))
 
-        integral = lambda x: kde(x) * (( kde1(x)*len(data1) )/( kde(x)*len(data)  )) * np.log2(( kde1(x)*len(data1) )/( kde(x)*len(data) )) if (kde(x)>0 and kde1(x)>0) else 0
+        
         val, err = integrate.quad(integral,minx,maxx)
         
         if np.isnan(val):
@@ -184,12 +187,13 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    dim = 2 #(参照する変数の数)
+    #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
+    dim = range(2)
     data = []
     min_box = []
     max_box = []
     box = []
-    for i in range(dim):
+    for i in dim:
         d = Feature_data[i]["all"]
         data.append(d)
         
@@ -199,51 +203,68 @@ def kde_multi(Feature_data=[],sites=None):
         max_box.append(maxx)
         box.append([minx,maxx])
     print(box)
-    kde = gaussian_kde(data)
+    kde = gaussian_kde(data,bw_method="silverman")
 
     
 
     #グラフ
-    """xticks = np.linspace(min_box[0], max_box[0], 1000)
-    yticks = np.linspace(min_box[1], max_box[1], 1000)
-    xx,yy = np.meshgrid(xticks,yticks)
-    mesh = np.vstack([xx.ravel(),yy.ravel()])
+    """xticks = np.linspace(min_box[0], max_box[0], 100)
+    yticks = np.linspace(min_box[1], max_box[1], 100)
+    zticks = np.linspace(min_box[2], max_box[2], 100)
+    xxx,yyy,zzz = np.meshgrid(xticks,yticks,zticks)
+    mesh = np.vstack([xxx.ravel(),yyy.ravel(),zzz.ravel()])"""
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
-
+    
+    #fig = plt.figure()
+    #ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
+    """print(mesh.shape)
+    print(mesh)
+    x = np.atleast_2d(np.asarray(mesh))
+    print(x.shape)
+    print(x)
     z = kde(mesh)
-    Z = z.reshape(len(yticks),len(xticks))
-    ax1.contourf(xx,yy,Z,cmap="Greens")"""
+    print(z)"""
+    
+
+    #Z = z.reshape(len(yticks),len(xticks),len(zticks))
+    #ax1.contourf(xx,yy,Z,cmap="Greens")
 
     
     n = len(data[0])
     
     Hcf = 0
     Hc = 0
+    #integral = lambda *x:( kde1(x)*n1 / n ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+    integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
+    all_time=0
     for i,site in enumerate(sites):
         data1 = []
-        for j in range(dim):
+        for j in dim:
             d1 = Feature_data[j][site]
             data1.append(d1)
-        rate = len(data1[0]) / len(data[0])
-        n1 = len(data1[0])
-        
+            n1 = len(data1[0])
+        rate = n1 / n
         Hc += rate*math.log2(rate)
 
         kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
-        integral = lambda *x: kde(x) * ( (kde1(x)*n1) / (kde(x)*n) ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+        
         #integral = lambda x,y:kde1([x,y])
-        val, err = integrate.nquad(integral,box)
+        print("integarl")
+        start = time.perf_counter()
+        val, err = integrate.nquad(integral,box,opts = {"limit":10000})
+        #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
+        print("time = ",time.perf_counter() - start)
+        all_time += time.perf_counter() - start
         print(val)
         Hcf += val
         """z1 = kde1(mesh)
         Z1 = z1.reshape(len(yticks),len(xticks))
         ax1.contourf(xx,yy,Z1,cmap="Greens", alpha=0.5)
         ax1.scatter(data1[0],data1[1])"""
+    print("all time = ",all_time)
 
     #range(2): mtual = 1.3904793915869877
-    print("mutual :",Hcf - Hc)
+    print(dim,"dims mutual :",Hcf - Hc)
     plt.show()
 
     return ([Hcf - Hc])
