@@ -183,12 +183,13 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    dim = 2 #(参照する変数の数)
+    #dim = range(1) #(参照する変数の数)
+    dim = [2]
     data = []
     min_box = []
     max_box = []
     box = []
-    for i in range(dim):
+    for i in dim:
         d = Feature_data[i]["all"]
         data.append(d)
         
@@ -198,7 +199,7 @@ def kde_multi(Feature_data=[],sites=None):
         max_box.append(maxx)
         box.append([minx,maxx])
     print(box)
-    kde = gaussian_kde(data)
+    kde = gaussian_kde(data,bw_method="silverman")
 
     
 
@@ -222,7 +223,7 @@ def kde_multi(Feature_data=[],sites=None):
     Hc = 0
     for i,site in enumerate(sites):
         data1 = []
-        for j in range(dim):
+        for j in dim:
             d1 = Feature_data[j][site]
             data1.append(d1)
         rate = len(data1[0]) / len(data[0])
@@ -231,8 +232,8 @@ def kde_multi(Feature_data=[],sites=None):
         Hc += rate*math.log2(rate)
 
         kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
-        integral = lambda *x: kde(x) * ( (kde1(x)*n1) / (kde(x)*n) ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
-        #integral = lambda x,y:kde1([x,y])
+        #integral = lambda *x: kde(x) * ( (kde1(x)*n1) / (kde(x)*n) ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+        integral = lambda *x:(lambda z,z1:z1*n1/n*np.log2((z1*n1)/(z*n)) if z>0 and z1>0 else 0)(kde(x),kde1(x))
         val, err = integrate.nquad(integral,box)
         print(val)
         Hcf += val
