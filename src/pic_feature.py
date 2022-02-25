@@ -6,6 +6,7 @@ import sys
 import scipy.io
 import itertools
 import math
+import csv
 
 def save_burst(Size):
     
@@ -122,6 +123,7 @@ def save_time(Time=[],Size=[]):
                 int_in.append(Time[i]-pre_in)
             pre_in=Time[i]
 
+    #print(np.max(int_all))
     feature.extend([np.max(int_all),np.mean(int_all),np.std(int_all),np.percentile(int_all,75)])
     feature.extend([np.max(int_out),np.mean(int_out),np.std(int_out),np.percentile(int_out,75)])
     feature.extend([np.max(int_in),np.mean(int_in),np.std(int_in),np.percentile(int_in,75)])
@@ -130,7 +132,7 @@ def save_time(Time=[],Size=[]):
     feature.extend([np.percentile(Time,25),np.percentile(Time,50),np.percentile(Time,75),np.percentile(Time,100)])
     feature.extend([np.percentile(time_out,25),np.percentile(time_out,50),np.percentile(time_out,75),np.percentile(time_out,100)])
     feature.extend([np.percentile(time_in,25),np.percentile(time_in,50),np.percentile(time_in,75),np.percentile(time_in,100)])
-
+    #print(feature)
     return feature
 
 def NgramLoc(sample,n):
@@ -401,6 +403,105 @@ def save_cumul(Size):
 
     return feature
 
+def save_CDNburst(Time=[],Size=[],IP=[]):
+    delta = 0.05
+    ip={}
+    for i in range(len(IP)):
+        if(Size[i]<0):
+            if(IP[i] not in ip):
+                ip[IP[i]] = [ Time[i] , [abs(Size[i])] ]
+            else:
+                if(Time[i] - ip[IP[i]][0] < delta):
+                    ip[IP[i]][1][-1] += abs(Size[i])
+                elif(Time[i] - ip[IP[i]][0] >= delta):
+                    ip[IP[i]][1].append(abs(Size[i]))
+                ip[IP[i]][0] = Time[i]
+    bursts=[]
+    for x in ip.values():
+        bursts.extend(x[1])
+    bursts.sort(reverse=True)
+    if(len(bursts)>50):
+        bursts = bursts[:50]
+    else:
+        for i in range(len(bursts),50):
+            bursts.append(0)
+
+    return bursts
+
+def save_timesp(Time,Size):
+    feature=[]
+    featurecount = 50
+    line = np.linspace(0,100,featurecount+1)
+    line = np.round(line)
+    #print(line)
+
+    for i in line:
+        if i==0:
+            continue
+        feature.append(np.percentile(Time,i))
+
+    return feature
+
+def save_distburst(Size):
+    featurecount=50
+    burst = []
+    stopped=0
+    curburst=0
+
+    for size in Size:
+        size = -size
+        if size>0:
+            stopped=0
+            curburst += size
+        elif size<0:
+            if stopped==0:
+                stopped=1
+            elif stopped==1:
+                stopped=0
+                if curburst!=0:
+                    burst.append(curburst)
+                    curburst=0
+
+    burst.sort(reverse=True)
+    if(len(burst)>50):
+        burst = burst[:50]
+    else:
+        for i in range(len(burst),featurecount):
+            burst.append(0)
+    
+    return burst
+
+def save_indist(Size=[]):
+    count = 0
+    feature=[]
+    tmp=[]
+
+
+    for i in range(0, min(len(Size),6000)):
+        if Size[i] < 0:
+            count+=1
+        if (i%30) == 29:
+            tmp.append(count)
+            count = 0
+    
+    for i in range(int(len(Size)/30),200):
+        tmp.append(0)
+
+    feature.extend(tmp)
+    feature.append(np.std(tmp))
+    feature.append(np.mean(tmp))
+    feature.append(np.median(tmp))
+    feature.append(np.max(tmp))
+
+    bucket = [0]*20
+    for i in range(0,200):
+        ib = int(i/10)
+        bucket[ib] = bucket[ib] + tmp[i]
+    feature.extend(bucket)
+    feature.append(np.sum(bucket))
+
+    return feature
+
 def cmp(a, b):
     return (a > b) - (a < b) 
 
@@ -432,95 +533,202 @@ def normalize_data(Time=[],Size=[]):
 
     return new_Time,new_Size
 
-def get_features(filename = "",ip=""):
+def save_Cumul50(Size):
+    featurecount=50
+    feature=[]
+    cum = []
+    insize=0
+    outsize=0
+    incount=0
+    outcount=0
 
-    #packet size (positive means outgoing and, negative, incoming.)
-    data = pyshark.FileCapture(filename)
+    for size in Size:
+        size = -size
+        if len(cum) == 0:
+            cum.append(size)
+        else:
+            cum.append(cum[-1]+size)
+
+
+    
+
+    x = np.linspace(0,len(cum)-1,featurecount+1)
+    x = np.round(x)
+    for i in x:
+        if i==0:
+            continue
+        feature.append(cum[int(i)])
+
+    return feature
+
+def save_timeburst(Size,Time):
+    featurecount = 50
+    delta = 0.05
+    burst=[]
+    last=-1
+
+    for i in range(len(Size)):
+        if(Size[i]<0):
+            if(last==-1):
+                burst.append(abs(Size[i]))
+            else:
+                if(Time[i]-last < delta):
+                    burst[-1] += abs(Size[i])
+                else:
+                    burst.append(abs(Size[i]))
+            last = Time[i]
+
+
+    burst.sort(reverse=True)
+    if(len(burst)>50):
+        burst = burst[:50]
+    else:
+        for i in range(len(burst),featurecount):
+            burst.append(0)
+
+    return burst
+
+def get_allfeature(Time=[],Size=[],IP=[]):
+
+    features=[]
+    
+    """
+    features.append(save_PktCount(Size))
+    features.append(save_time(Time,Size))
+    ngram=[]
+    for n in range(2,7):
+        ngram.extend(save_ngram(Size,n))
+    features.append(ngram)
+    features.append(save_transpos(Size))
+    features.append(save_intI(Size))
+    features.append(save_intII_III(Size))
+    features.append(save_dist(Size))
+    features.append(save_dist(Size))
+    features.append(save_burst(Size))
+    features.append(save_ht(Size))
+    features.append(save_PktSec(Time,Size))
+    features.append(save_cumul(Size))
+    if(len(IP)>0):
+        features.append(save_CDNburst(Time,Size,IP))
+    """
+    """
+    Time100 = save_time100(Time,Size)
+    inburst = save_inburst(Size)
+    indist = save_indist(Size)
+    """
+    
+    features.append(save_Cumul50(Size))
+    features.append(save_CDNburst(Time,Size,IP))
+    features.append(save_timesp(Time,Size))
+
+    return features
+
+def get_features(filename = ""):
 
     https = 443
     http  = 80
-
     Time=[]
     Size=[]
+    IP=[]
+    #print("open : "+filename)
 
-    for packet in data:
-        if "TCP" in packet:
-            #to server
-            if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-                Time.append(float(packet.sniff_timestamp))
-                Size.append(int(packet.length))
+    if os.path.isfile(filename+".csv"):
+        with open(filename+".csv") as f:
+            data = csv.reader(f)
+    
+            for packet in data:
+                if(packet[0] == "index"):
+                    continue
+                Size.append(int(packet[1]))
+                Time.append(float(packet[2]))
+                IP.append(packet[3])
+                
+    else:
+        data = pyshark.FileCapture(filename+".pcap")
 
-            #from server
-            elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-                Time.append(float(packet.sniff_timestamp))
-                Size.append(-int(packet.length))
-    data.close()
+        for packet in data:
+            if "TCP" in packet:
+
+                #to server
+                if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
+                    Size.append(int(packet.length))
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
+                #from server
+                elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
+                    Size.append(-int(packet.length))
+                    IP.append(packet.ip.host)
+                    Time.append(float(packet.sniff_timestamp))
+        data.close()
 
 
+    if len(Size)==0:
+        return(None)
     #Time normarize
     start_time=Time[0]
     Time = list(map(lambda x:x-start_time, Time))
 
-     
-    #normalize 
-    #Time,Size = normalize_data(Time,Size)
-    
-    pktcount = save_PktCount(Size)
-    time = save_time(Time,Size)
-    ngram=[]
-    for n in range(2,7):
-        ngram.extend(save_ngram(Size,n))
-    trans = save_transpos(Size)
-    IntervalI = save_intI(Size)
-    IntervalII = save_intII_III(Size)
-    dist = save_dist(Size)
-    bur = save_burst(Size)
-    ht = save_ht(Size)
-    PktSec = save_PktSec(Time,Size)
-    cumul = save_cumul(Size)
+    feature = get_allfeature(Time,Size,IP)
+    #feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
 
-    feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
-    """
-    x=0
-    for f in feature:
-        x += len(f)
-        print(str(x) + " : (" +str(len(f)) + ")")
-    """
+    return(feature)
+
+
+def get_csv(filename = ""):
+    #packet size (positive means outgoing and, negative, incoming.)
+    Time=[]
+    Size=[]
+    IP=[]
+    with open(filename) as f:
+        reader = csv.reader(f)
+    
+        for packet in reader:
+            if(len(packet)<1):
+                continue
+            Size.append(int(packet[1]))
+            Time.append(float(packet[2]))
+
+
+    
+    feature = get_allfeature(Time,Size,IP)
+    #feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
+
     return(feature)
 
 
 
-if __name__ == "__main__":
-    #args = sys.argv 
-
+def pic_mydata():
     train_size=100
+    place = ["lib","odins","icn"]
 
-    with open("../data/sites",'r') as f:
-        sites = f.readlines()
-        for site in sites:
+    for loc in place:
+        with open("../data/sites",'r') as f:
+            sites = f.readlines()
+            for site in sites:
 
-            s = site.split()
-            if s[0] == "#":
-                continue
+                s = site.split()
+                if s[0] == "#":
+                    continue
+                features=[]
+                for i in range(train_size):
+                    if not os.path.isfile("../data/train/"+loc+"/"+s[1]+"/"+str(i)+".pcap"):
+                        break
+                    print("../data/train/"+loc+"/"+s[1]+"/"+str(i)+".pcap")
+                    get = get_features("../data/train/"+loc+"/"+s[1]+"/"+str(i))
+
+                    feature=[]
+                    for g in get:
+                        feature.extend(g)
+                    features.append(feature)
+
+                    #print(str(i)+" times of " + s[1])
+
+                f = open('../data/features/'+loc+"/"+s[1], 'wb')
+                pickle.dump(features,f)
+                f.close()
             
-            features=[]
-            for i in range(train_size):
-                if not os.path.isfile("../data/train/"+s[1]+"/"+str(i)+".pcap"):
-                    break
-                get = get_features("../data/train/"+s[1]+"/"+str(i)+".pcap",s[2])
+                print("get feature of :" + s[1])
+        #print(site_data)
 
-                feature=[]
-                for g in get:
-                    feature.extend(g)
-                features.append(feature)
-                print(len(feature))
-
-                print(str(i)+" times of " + s[1])
-
-            f = open('../data/features/total/'+s[1], 'wb')
-            pickle.dump(features,f)
-            f.close()
-        
-            print("get feature of :" + s[1])
-
-    #print(site_data)
+if __name__ == "__main__":
+    pic_mydata()
