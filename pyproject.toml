@@ -2,6 +2,7 @@
 name = "analysis-feature"
 version = "0.1.0"
 description = ""
+<<<<<<< HEAD
 authors = ["K5 <oujk17@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -9,6 +10,15 @@ python = "3.8.8"
 scipy = "1.7.1"
 matplotlib = "3.4.1"
 matlab = "0.1"
+=======
+authors = ["HamanakaKeigo <k-hamanaka@ist.osaka-u.ac.jp>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+scipy = "1.6.2"
+matlab = "0.1"
+matplotlib = "3.4.1"
+>>>>>>> main
 pyshark = "0.4.3"
 
 [tool.poetry.dev-dependencies]
