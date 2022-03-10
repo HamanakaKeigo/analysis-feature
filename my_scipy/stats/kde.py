@@ -216,7 +216,25 @@ class gaussian_kde(object):
                 self.inv_cov = cov_inv[0]
                 self.covariance = cov_inv[1]
 
+
+        self.whitening = np.linalg.cholesky(self.inv_cov).astype(np.float64, copy=False)
+        self.points_ = np.dot(self.dataset.T, self.whitening).astype(np.float64, copy=False)
+        self.values_ = self.weights[:, None].astype(np.float64, copy=False)
+        #self.xi_ = np.dot(points.T, whitening).astype(output_dtype, copy=False)
+        
+    def ev_1p(self,points):
+
+        points = atleast_2d(asarray(points))
+        d, m = points.shape
+
+        spec = 'double'
+        result = gauss[spec](self.whitening, self.points_ ,points, self.values_ ,  np.float64)
+
+        return result
+
+
     def evaluate(self, points):
+        
         """Evaluate the estimated pdf on a set of points.
 
         Parameters
@@ -265,25 +283,10 @@ class gaussian_kde(object):
             raise TypeError('%s has unexpected item size %d' %
                             (output_dtype, itemsize))
         
-        #result = self.gaussian_kernel_estimate(self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
-        #start = time.perf_counter()
+
         result = gaussian_kernel_estimate[spec](self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
-        #print("lib 1call time = ",time.perf_counter()-start)
-        print(result)
-
-        start = time.perf_counter()
-
-        whitening = np.linalg.cholesky(self.inv_cov).astype(output_dtype, copy=False)
-        points_ = np.dot(self.dataset.T, whitening).astype(output_dtype, copy=False)
-        xi_ = np.dot(points.T, whitening).astype(output_dtype, copy=False)
-        values_ = self.weights[:, None].astype(output_dtype, copy=False)
-
-        result = gauss[spec](whitening, points_, xi_,values_, output_dtype)
+        #result = gauss[spec](self.whitening, self.points_, points.T,self.values_, output_dtype)
         #result = self.my_gaussian_kernel_estimate(self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
-        print("my 1call time = ",time.perf_counter()-start)
-
-        #diff = result1-result
-        #print(diff.max())
         return result
 
     __call__ = evaluate
@@ -377,6 +380,7 @@ class gaussian_kde(object):
             Multivariate Gaussian kernel estimate evaluated at the input coordinates.
         """
 
+        
         n = points.shape[0]
         d = points.shape[1]
         m = xi.shape[0]
@@ -397,22 +401,21 @@ class gaussian_kde(object):
         norm = math.pow((2 * np.pi) ,(- d / 2))
         for i in range(d):
             norm *= whitening[i, i]
-
+        
         # Create the result array and evaluate the weighted sum
         estimate = np.zeros((m, p), dtype)
-        stack=np.zeros((m,n))
-        print(n,m)
         for i in range(n):
             for j in range(m):
                 arg = 0
                 for k in range(d):
                     residual = (points_[i, k] - xi_[j, k])
                     arg += residual * residual
+                    
 
                 arg = math.exp(-arg / 2) * norm
                 for k in range(p):
-                    stack[j][i]= values_[i, k] * arg
                     estimate[j, k] += values_[i, k] * arg
+        
         return np.asarray(estimate)
 
 

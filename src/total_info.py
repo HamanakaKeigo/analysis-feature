@@ -127,17 +127,21 @@ def kde_1d(Feature_data=[],sites=None,id=0):
     kde = gaussian_kde(data,bw_method="silverman")
     minx = min(data) - (max(data)-min(data))/2
     maxx = max(data) + (max(data)-min(data))/2
-    xticks = np.linspace(minx, maxx, 1000)
-    print(minx,maxx)
-    
+
+    xticks = np.linspace(minx, maxx, 50)
     z = kde(xticks)
     ax1.plot(xticks,z*len(data),color="k")
-    
-    
+    real_ticks = np.linspace(minx, maxx, 1000)
+    real_z = kde(real_ticks)
+    ax1.plot(real_ticks,real_z*len(data),color="k")
+
+    print(minx,maxx)
 
     Hcf = 0
     Hc = 0
-    integral = lambda x: kde(x) * (( kde1(x)*len(data1) )/( kde(x)*len(data)  )) * np.log2(( kde1(x)*len(data1) )/( kde(x)*len(data) )) if (kde(x)>0 and kde1(x)>0) else 0
+    integral = lambda x: kde.ev_1p(x) * (( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data)  )) * np.log2(( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data) )) if (kde.ev_1p(x)>0 and kde1.ev_1p(x)>0) else 0
+    
+    
     for site in sites:
         data1 = Feature_data[id][site]
         if len(data1)==0:
@@ -157,17 +161,14 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         
         val, err = integrate.quad(integral,minx,maxx)
         
-        if np.isnan(val):
+        if not np.isnan(val):
             print(site)
-            fig = plt.figure()
-            ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
+            
 
             xticks = np.linspace(minx, maxx, 100)
-            z = kde(xticks)
-            ax1.plot(xticks,z*len(data),color="k")
             z1 = kde1(xticks)
             ax1.plot(xticks,z1*len(data1))
-            plt.show()
+        else:
             continue
         #print(site," val:",val)
 
@@ -176,7 +177,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         Hcf += val
         #print(val)
         #print(err)
-
+    plt.show()
     fig.savefig("../data/plot/kernel/total/"+str(id+1)+".png")
 
 
@@ -235,7 +236,8 @@ def kde_multi(Feature_data=[],sites=None):
     Hcf = 0
     Hc = 0
     #integral = lambda *x:( kde1(x)*n1 / n ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
-    integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
+    #integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
+    integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1.ev_1p(x),kde.ev_1p(x))
     all_time=0
     for i,site in enumerate(sites):
         data1 = []
@@ -249,18 +251,13 @@ def kde_multi(Feature_data=[],sites=None):
         kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
         
         #integral = lambda x,y:kde1([x,y])
-        print("integarl")
         start = time.perf_counter()
-        val, err = integrate.nquad(integral,box,opts = {"limit":10000})
+        val, err = integrate.nquad(integral,box)
         #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
         print("time = ",time.perf_counter() - start)
         all_time += time.perf_counter() - start
         print(val)
         Hcf += val
-        """z1 = kde1(mesh)
-        Z1 = z1.reshape(len(yticks),len(xticks))
-        ax1.contourf(xx,yy,Z1,cmap="Greens", alpha=0.5)
-        ax1.scatter(data1[0],data1[1])"""
     print("all time = ",all_time)
 
     #range(2): mtual = 1.3904793915869877
@@ -276,7 +273,7 @@ def get_points(Feature_data=[],sites=None):
     max_box = []
     box = []
     for i in dim:
-        d = Feature_data[i]["all"]
+        d = Feature_data[i]["all"][:5]
         data.append(d)
         
         minx = min(d) - (max(d)-min(d))/2
@@ -285,12 +282,12 @@ def get_points(Feature_data=[],sites=None):
         max_box.append(maxx)
         box.append([minx,maxx])
     print(box)
-    kde = gaussian_kde(data[:10],bw_method="silverman")
+    kde = gaussian_kde(data[:5],bw_method="silverman")
     
 
-    xticks = np.linspace(min_box[0], max_box[0], 2)
-    yticks = np.linspace(min_box[1], max_box[1], 2)
-    zticks = np.linspace(min_box[2], max_box[2], 2)
+    xticks = np.linspace(min_box[0], max_box[0], 1)
+    yticks = np.linspace(min_box[1], max_box[1], 1)
+    zticks = np.linspace(min_box[2], max_box[2], 1)
     xxx,yyy,zzz = np.meshgrid(xticks,yticks,zticks)
     #print(xxx)
     #print(yyy)
@@ -330,10 +327,10 @@ def calc_info(sites=[],target=""):
 
     #test_multi(Feature_data)
     info=[]
-    #for i in range (len(Feature_data)):
+    #for i in range (3):
         #info.append(kde_1d(Feature_data,sites,i))
-    #info.append(kde_multi(Feature_data,sites))
-    info.append(get_points(Feature_data))
+    info.append(kde_multi(Feature_data,sites))
+    #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     
     return(info)

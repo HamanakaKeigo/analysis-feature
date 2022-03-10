@@ -20,7 +20,7 @@ ctypedef fused real:
 @cython.wraparound(False)
 @cython.boundscheck(False)
 
-def gauss(whitening, points_, xi_,values_, dtype, real _=0):
+def gauss(whitening, points, xi,values, dtype, real _=0):
     """
     def gaussian_kernel_estimate(points, real[:, :] values, xi, precision)
     Evaluate a multivariate Gaussian kernel estimate.
@@ -40,33 +40,42 @@ def gauss(whitening, points_, xi_,values_, dtype, real _=0):
         Multivariate Gaussian kernel estimate evaluated at the input coordinates.
     """
     cdef:
-        real[:, :] estimate
-        int i, j, k
-        int n, d, m, p
-        real arg, residual, norm
+        real[:, :] xi_, values_,points_,estimate
+        int i, k
+        int n, d, p
+        double arg, residual, norm
+    
 
-    n = points_.shape[0]
-    d = points_.shape[1]
-    m = xi_.shape[0]
-    p = values_.shape[1]
-    print(n,d,m,p)
+    n = points.shape[0]
+    d = points.shape[1]
+    p = values.shape[1]
+    
+
+    # Rescale the data
+    xi_ = np.dot(xi, whitening).astype(dtype, copy=False)
+    values_ = np.array(values).astype(dtype, copy=False)
+    points_ = np.array(points).astype(dtype, copy=False)
+
+    
 
     # Evaluate the normalisation
-    norm = math.pow((2 * PI) ,(- d / 2))
+    norm = math.pow((2 * PI) ,<double>-d/2)
     for i in range(d):
         norm *= whitening[i, i]
+    
 
     # Create the result array and evaluate the weighted sum
-    estimate = np.zeros((m, p), dtype)
+    estimate = np.zeros((1, p), dtype)
     for i in range(n):
-        for j in range(m):
-            arg = 0
-            for k in range(d):
-                residual = (points_[i, k] - xi_[j, k])
-                arg += residual * residual
+        arg = 0
+        for k in range(d):
+            residual = (points_[i, k] - xi_[0, k])
+            arg += residual * residual
+            
 
-            arg = math.exp(-arg / 2) * norm
-            for k in range(p):
-                estimate[j, k] += values_[i, k] * arg
+        arg = math.exp(-arg / 2) * norm
+        for k in range(p):
+            estimate[0, k] += values_[i, k] * arg
+        
 
     return np.asarray(estimate)

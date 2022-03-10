@@ -19,7 +19,7 @@ x = [[5,6,7,8,9,10],
 x = np.array(x).T
 w = [[1],[2],[3],[4],[5],[6]]
 w = np.array(w).T[0]
-print(type(w[0]))
+
 #print("w", np.tile(w.T,3)[0])
 #w = np.ravel(w)
 #w = np.split(np.repeat(np.tile(w,len(points)),len(x[0])),len(x)*len(points))
