@@ -1,3 +1,5 @@
 data/train
 *.png
+data/info.csv
+data/info_old.csv
 test/

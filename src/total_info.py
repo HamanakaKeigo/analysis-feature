@@ -269,6 +269,39 @@ def kde_multi(Feature_data=[],sites=None):
 
     return ([Hcf - Hc])
 
+def get_points(Feature_data=[],sites=None):
+    dim = range(3)
+    data = []
+    min_box = []
+    max_box = []
+    box = []
+    for i in dim:
+        d = Feature_data[i]["all"]
+        data.append(d)
+        
+        minx = min(d) - (max(d)-min(d))/2
+        min_box.append(minx)
+        maxx = max(d) + (max(d)-min(d))/2
+        max_box.append(maxx)
+        box.append([minx,maxx])
+    print(box)
+    kde = gaussian_kde(data[:10],bw_method="silverman")
+    
+
+    xticks = np.linspace(min_box[0], max_box[0], 2)
+    yticks = np.linspace(min_box[1], max_box[1], 2)
+    zticks = np.linspace(min_box[2], max_box[2], 2)
+    xxx,yyy,zzz = np.meshgrid(xticks,yticks,zticks)
+    #print(xxx)
+    #print(yyy)
+    #print(zzz)
+    
+    mesh = np.vstack([xxx.ravel(),yyy.ravel(),zzz.ravel()])
+    print(mesh.shape)
+    ans = kde(mesh)
+
+    return ans
+
 def calc_info(sites=[],target=""):
 
     information_leakage=[]
@@ -299,7 +332,8 @@ def calc_info(sites=[],target=""):
     info=[]
     #for i in range (len(Feature_data)):
         #info.append(kde_1d(Feature_data,sites,i))
-    info.append(kde_multi(Feature_data,sites))
+    #info.append(kde_multi(Feature_data,sites))
+    info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     
     return(info)
@@ -319,6 +353,9 @@ if __name__ == "__main__":
                 sites.append(s[1])
 
     data = calc_info(sites,target)
+    print(data)
+    """
     with open("../data/info.csv","w") as f:
         writer = csv.writer(f)
         writer.writerows(data)
+    """

@@ -19,6 +19,7 @@
 
 # Standard library imports.
 import warnings
+import time
 
 # SciPy imports.
 from scipy import linalg, special
@@ -33,7 +34,9 @@ import numpy as np
 # Local imports.
 from . import mvn
 from ._stats import gaussian_kernel_estimate
+import math
 
+from my_kde import gauss
 
 __all__ = ['gaussian_kde']
 
@@ -233,7 +236,9 @@ class gaussian_kde(object):
                      the dimensionality of the KDE.
 
         """
+        #print(type(points))
         points = atleast_2d(asarray(points))
+        #print(self.weights[:, None].shape)
 
         d, m = points.shape
         if d != self.d:
@@ -248,6 +253,8 @@ class gaussian_kde(object):
 
         output_dtype = np.common_type(self.covariance, points)
         itemsize = np.dtype(output_dtype).itemsize
+        #output_dtype = np.float64
+        #itemsize = 8
         if itemsize == 4:
             spec = 'float'
         elif itemsize == 8:
@@ -257,11 +264,157 @@ class gaussian_kde(object):
         else:
             raise TypeError('%s has unexpected item size %d' %
                             (output_dtype, itemsize))
-        result = gaussian_kernel_estimate[spec](self.dataset.T, self.weights[:, None],
-                                                points.T, self.inv_cov, output_dtype)
-        return result[:, 0]
+        
+        #result = self.gaussian_kernel_estimate(self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
+        #start = time.perf_counter()
+        result = gaussian_kernel_estimate[spec](self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
+        #print("lib 1call time = ",time.perf_counter()-start)
+        print(result)
+
+        start = time.perf_counter()
+
+        whitening = np.linalg.cholesky(self.inv_cov).astype(output_dtype, copy=False)
+        points_ = np.dot(self.dataset.T, whitening).astype(output_dtype, copy=False)
+        xi_ = np.dot(points.T, whitening).astype(output_dtype, copy=False)
+        values_ = self.weights[:, None].astype(output_dtype, copy=False)
+
+        result = gauss[spec](whitening, points_, xi_,values_, output_dtype)
+        #result = self.my_gaussian_kernel_estimate(self.dataset.T, self.weights[:, None],points.T, self.inv_cov, output_dtype)
+        print("my 1call time = ",time.perf_counter()-start)
+
+        #diff = result1-result
+        #print(diff.max())
+        return result
 
     __call__ = evaluate
+
+    def my_gaussian_kernel_estimate(self,points, values, xi, precision, dtype):
+        """
+        def gaussian_kernel_estimate(points, real[:, :] values, xi, precision)
+
+        Evaluate a multivariate Gaussian kernel estimate.
+
+        Parameters
+        ----------
+        points : array_like with shape (n, d)
+            Data points to estimate from in d dimenions.
+        values : real[:, :] with shape (n, p)
+            Multivariate values associated with the data points.
+        xi : array_like with shape (m, d)
+            Coordinates to evaluate the estimate at in d dimensions.
+        precision : array_like with shape (d, d)
+            Precision matrix for the Gaussian kernel.
+
+        Returns
+        -------
+        estimate : double[:, :] with shape (m, p)
+            Multivariate Gaussian kernel estimate evaluated at the input coordinates.
+        """
+
+        """
+        cdef:
+            real[:, :] points_, xi_, values_, estimate, whitening
+            int i, j, k
+            int n, d, m, p
+            real arg, residual, norm
+        """
+
+        n = points.shape[0]
+        d = points.shape[1] # dataset
+        m = xi.shape[0]
+
+        if xi.shape[1] != d:
+            raise ValueError("points and xi must have same trailing dim")
+        if precision.shape[0] != d or precision.shape[1] != d:
+            raise ValueError("precision matrix must match data dims")
+
+
+        # Rescale the data
+        whitening = np.linalg.cholesky(precision).astype(dtype, copy=False)
+        points_ = np.dot(points, whitening).astype(dtype, copy=False)
+        xi_ = np.dot(xi, whitening).astype(dtype, copy=False)
+
+
+        val = np.tile(values.T,m)[0]
+        # Evaluate the normalisation
+        norm = math.pow((2 * np.pi) ,(- d / 2))
+        for i in range(d):
+            norm *= whitening[i, i]
+
+        tile = np.repeat(points_,m,axis=0) - np.tile(xi_,(n,1))
+        tile = np.square(tile)
+
+        tile = np.sum(tile,axis=1)
+        tile = np.exp(-tile / 2) * norm
+        tile = tile * val
+
+        tile = np.split(tile,n)
+        tile = np.sum(tile,axis=0)
+
+
+        return tile
+
+    def gaussian_kernel_estimate(self,points, values, xi, precision, dtype):
+        """
+        def gaussian_kernel_estimate(points, real[:, :] values, xi, precision)
+
+        Evaluate a multivariate Gaussian kernel estimate.
+
+        Parameters
+        ----------
+        points : array_like with shape (n, d)
+            Data points to estimate from in d dimenions.
+        values : real[:, :] with shape (n, p)
+            Multivariate values associated with the data points.
+        xi : array_like with shape (m, d)
+            Coordinates to evaluate the estimate at in d dimensions.
+        precision : array_like with shape (d, d)
+            Precision matrix for the Gaussian kernel.
+
+        Returns
+        -------
+        estimate : double[:, :] with shape (m, p)
+            Multivariate Gaussian kernel estimate evaluated at the input coordinates.
+        """
+
+        n = points.shape[0]
+        d = points.shape[1]
+        m = xi.shape[0]
+        p = values.shape[1]
+
+        if xi.shape[1] != d:
+            raise ValueError("points and xi must have same trailing dim")
+        if precision.shape[0] != d or precision.shape[1] != d:
+            raise ValueError("precision matrix must match data dims")
+
+        # Rescale the data
+        whitening = np.linalg.cholesky(precision).astype(dtype, copy=False)
+        points_ = np.dot(points, whitening).astype(dtype, copy=False)
+        xi_ = np.dot(xi, whitening).astype(dtype, copy=False)
+        values_ = values.astype(dtype, copy=False)
+
+        # Evaluate the normalisation
+        norm = math.pow((2 * np.pi) ,(- d / 2))
+        for i in range(d):
+            norm *= whitening[i, i]
+
+        # Create the result array and evaluate the weighted sum
+        estimate = np.zeros((m, p), dtype)
+        stack=np.zeros((m,n))
+        print(n,m)
+        for i in range(n):
+            for j in range(m):
+                arg = 0
+                for k in range(d):
+                    residual = (points_[i, k] - xi_[j, k])
+                    arg += residual * residual
+
+                arg = math.exp(-arg / 2) * norm
+                for k in range(p):
+                    stack[j][i]= values_[i, k] * arg
+                    estimate[j, k] += values_[i, k] * arg
+        return np.asarray(estimate)
+
 
     def integrate_gaussian(self, mean, cov):
         """
