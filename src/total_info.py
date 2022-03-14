@@ -183,8 +183,8 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    #dim = range(1) #(参照する変数の数)
-    dim = [2]
+    dim = range(2) #(参照する変数の数)
+    #dim = [2]
     data = []
     min_box = []
     max_box = []
