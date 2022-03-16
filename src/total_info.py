@@ -299,7 +299,7 @@ def get_points(Feature_data=[],sites=None):
 
     return ans
 
-def calc_info(sites=[],target=""):
+def calc_info(sites=[]):
 
     information_leakage=[]
     Feature_data = []
@@ -338,7 +338,6 @@ def calc_info(sites=[],target=""):
 
 if __name__ == "__main__":
     sites = []
-    target = "wpf"
 
     with open("../data/sites",'r') as f1:
         site_list = f1.readlines()
@@ -346,10 +345,9 @@ if __name__ == "__main__":
             s = site.split()
             if s[0] == "#":
                 continue
-            if (s[2] == target):
-                sites.append(s[1])
+            sites.append(s[1])
 
-    data = calc_info(sites,target)
+    data = calc_info(sites)
     print(data)
     """
     with open("../data/info.csv","w") as f:

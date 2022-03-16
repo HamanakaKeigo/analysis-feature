@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 
 if __name__ == "__main__":
 
-    test_epoch = 150
+    test_epoch = 1
     loc = "icn"
 
     with open("../data/sites",'r') as f:

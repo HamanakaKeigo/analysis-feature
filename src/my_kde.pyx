@@ -1,15 +1,10 @@
-from cpython cimport bool
 from libc cimport math
 cimport cython
 cimport numpy as np
 from numpy.math cimport PI
-from numpy cimport ndarray, int64_t, float64_t, intp_t
-import warnings
+from numpy cimport ndarray, float64_t
 import numpy as np
-import scipy.stats, scipy.special
-cimport scipy.special.cython_special as cs
 
-ctypedef np.float64_t DTYPE
 
 ctypedef fused real:
     float
