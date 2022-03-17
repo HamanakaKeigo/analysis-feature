@@ -3,3 +3,4 @@ data/train
 data/info.csv
 data/info_old.csv
 test/
+*.prof

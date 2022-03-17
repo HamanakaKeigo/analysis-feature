@@ -625,42 +625,13 @@ def get_allfeature(Time=[],Size=[],IP=[]):
 
 def get_features(filename = ""):
 
-    https = 443
-    http  = 80
-    Time=[]
-    Size=[]
-    IP=[]
+    
     #print("open : "+filename)
 
     if os.path.isfile(filename+".csv"):
-        with open(filename+".csv") as f:
-            data = csv.reader(f)
-    
-            for packet in data:
-                if(packet[0] == "index"):
-                    continue
-                Size.append(int(packet[1]))
-                Time.append(float(packet[2]))
-                IP.append(packet[3])
-                
+        Time,Size,IP = get_csv(filename+".csv")        
     else:
-        data = pyshark.FileCapture(filename+".pcap")
-
-        for packet in data:
-            if "TCP" in packet:
-
-                #to server
-                if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
-                    Size.append(int(packet.length))
-                    IP.append(packet.ip.host)
-                    Time.append(float(packet.sniff_timestamp))
-                #from server
-                elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
-                    Size.append(-int(packet.length))
-                    IP.append(packet.ip.host)
-                    Time.append(float(packet.sniff_timestamp))
-        data.close()
-
+        Time,Size,IP = get_pcap(filename+"pcap")
 
     if len(Size)==0:
         return(None)
@@ -673,6 +644,31 @@ def get_features(filename = ""):
 
     return(feature)
 
+def get_pcap(filename):
+    Time=[]
+    Size=[]
+    IP=[]
+
+    https = 443
+    http  = 80
+
+    data = pyshark.FileCapture(filename)
+    for packet in data:
+        if "TCP" in packet:
+
+            #to server
+            if(int(packet.tcp.dstport) == https or packet.tcp.dstport == http):
+                Size.append(int(packet.length))
+                IP.append(packet.ip.host)
+                Time.append(float(packet.sniff_timestamp))
+            #from server
+            elif(int(packet.tcp.srcport) == https or packet.tcp.srcport == http):
+                Size.append(-int(packet.length))
+                IP.append(packet.ip.host)
+                Time.append(float(packet.sniff_timestamp))
+    data.close()
+
+    return (Time,Size,IP)
 
 def get_csv(filename = ""):
     #packet size (positive means outgoing and, negative, incoming.)
@@ -682,23 +678,19 @@ def get_csv(filename = ""):
     with open(filename) as f:
         reader = csv.reader(f)
     
-        for packet in reader:
-            if(len(packet)<1):
+        for i,packet in enumerate(reader):
+            if(i==0):
                 continue
             Size.append(int(packet[1]))
             Time.append(float(packet[2]))
+            IP.append(packet[3])
 
-
-    
-    feature = get_allfeature(Time,Size,IP)
-    #feature = [pktcount,time,ngram,trans,IntervalI,IntervalII,dist,bur,ht,PktSec,cumul]
-
-    return(feature)
+    return(Time,Size,IP)
 
 
 
 def pic_mydata():
-    train_size=100
+    train_size=150
     place = ["lib","odins","icn"]
 
     for loc in place:

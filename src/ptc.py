@@ -42,6 +42,7 @@ def to_csv(filename=""):
 
 if __name__ == "__main__":
     
+    loc = "icn"
     train_size = 100
 
     with open("../data/sites",'r') as f:
@@ -53,9 +54,9 @@ if __name__ == "__main__":
             
 
             features=[]
-            for i in range(48,49):
-                if not os.path.isfile("../data/train/odins/"+s[1]+"/"+str(i)+".pcap"):
+            for i in range(train_size):
+                if not os.path.isfile("../data/train/"+loc+"/"+s[1]+"/"+str(i)+".pcap"):
                     break
                 #print("../data/train/"+s[1]+"/"+str(i)+".pcap")
-                to_csv("../data/train/odins/"+s[1]+"/"+str(i))
+                to_csv("../data/train/"+loc+"/"+s[1]+"/"+str(i))
 
