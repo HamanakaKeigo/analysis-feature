@@ -189,7 +189,8 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
     #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
-    dim = range(2)
+    dim = range(3)
+    #mutual 0.026685512930465324
     data = []
     min_box = []
     max_box = []
@@ -206,31 +207,7 @@ def kde_multi(Feature_data=[],sites=None):
     print(box)
     kde = gaussian_kde(data,bw_method="silverman")
 
-    
 
-    #グラフ
-    """xticks = np.linspace(min_box[0], max_box[0], 100)
-    yticks = np.linspace(min_box[1], max_box[1], 100)
-    zticks = np.linspace(min_box[2], max_box[2], 100)
-    xxx,yyy,zzz = np.meshgrid(xticks,yticks,zticks)
-    mesh = np.vstack([xxx.ravel(),yyy.ravel(),zzz.ravel()])"""
-
-    
-    #fig = plt.figure()
-    #ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
-    """print(mesh.shape)
-    print(mesh)
-    x = np.atleast_2d(np.asarray(mesh))
-    print(x.shape)
-    print(x)
-    z = kde(mesh)
-    print(z)"""
-    
-
-    #Z = z.reshape(len(yticks),len(xticks),len(zticks))
-    #ax1.contourf(xx,yy,Z,cmap="Greens")
-
-    
     n = len(data[0])
     
     Hcf = 0
@@ -241,6 +218,8 @@ def kde_multi(Feature_data=[],sites=None):
     all_time=0
     for i,site in enumerate(sites):
         data1 = []
+        if i==1:
+            break
         for j in dim:
             d1 = Feature_data[j][site]
             data1.append(d1)
@@ -254,11 +233,11 @@ def kde_multi(Feature_data=[],sites=None):
         start = time.perf_counter()
         val, err = integrate.nquad(integral,box)
         #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
-        print("time = ",time.perf_counter() - start)
+        print(site,time.perf_counter() - start,"sec")
         all_time += time.perf_counter() - start
         print(val)
         Hcf += val
-    print("all time = ",all_time)
+    print("total",all_time,"sec")
 
     #range(2): mtual = 1.3904793915869877
     print(dim,"dims mutual :",Hcf - Hc)

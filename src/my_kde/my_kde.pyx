@@ -35,7 +35,7 @@ def gauss(whitening, points, xi,values, dtype, real _=0):
         Multivariate Gaussian kernel estimate evaluated at the input coordinates.
     """
     cdef:
-        real[:, :] xi_, values_,points_,estimate
+        real[:, :] xi_, values_,points_,estimate,whitening_
         int i, k
         int n, d, p
         double arg, residual, norm
@@ -50,6 +50,7 @@ def gauss(whitening, points, xi,values, dtype, real _=0):
     xi_ = np.dot(xi, whitening).astype(dtype, copy=False)
     values_ = np.array(values).astype(dtype, copy=False)
     points_ = np.array(points).astype(dtype, copy=False)
+    whitening_ = np.array(whitening).astype(dtype, copy=False)
 
     
 
@@ -69,8 +70,7 @@ def gauss(whitening, points, xi,values, dtype, real _=0):
             
 
         arg = math.exp(-arg / 2) * norm
-        for k in range(p):
-            estimate[0, k] += values_[i, k] * arg
+        estimate[0, 0] += values_[i, 0] * arg
         
 
     return np.asarray(estimate)

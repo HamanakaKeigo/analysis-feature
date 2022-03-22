@@ -223,8 +223,11 @@ class gaussian_kde(object):
         #self.xi_ = np.dot(points.T, whitening).astype(output_dtype, copy=False)
         
     def ev_1p(self,points):
-
-        points = atleast_2d(asarray(points))
+        #print(np.array([points]))
+        points = np.array([points])
+        #print(points)
+        
+        #points = np.array([[points[0],points[2]]])
         d, m = points.shape
 
         spec = 'double'

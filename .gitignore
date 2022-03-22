@@ -1,6 +1,6 @@
 data/dataset/origin
 data/dataset/old
-*.png
-test/
+test
 *.prof
 *.pcap
+*.png
