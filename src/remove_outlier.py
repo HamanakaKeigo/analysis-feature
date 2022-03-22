@@ -33,12 +33,9 @@ def get_alldata(train_size,place):
             size_list = np.array(list(size.values())).ravel()
             return(size,size_list)
 
-def remove(train_size,place,size,q75,q25):
+def remove(train_size,place,size):
 
-    low = q25 - 1.5*(q75-q25)
-    high = q75 + 1.5*(q75-q25)
-    print("low   =",low)
-    print("hight =",high)
+    
 
     
     for loc in place:
@@ -48,6 +45,12 @@ def remove(train_size,place,size,q75,q25):
                 s = site.split()
                 if s[0] == "#":
                     continue
+                data = size[s[1]]
+
+                q75, q25 = np.percentile(data, [75 ,25])
+                low = q25 - 1.5*(q75-q25)
+                high = q75 + 1.5*(q75-q25)
+                print(high,low)
                 
                 origin_path = "../data/dataset/origin/"+loc+"/"+s[1]+"/"
                 copy_path = "../data/dataset/processed/"+loc+"/"+s[1]
@@ -68,11 +71,5 @@ if __name__ == "__main__":
     place = ["icn"]
 
     size,size_list = get_alldata(train_size,place)
-    #size{"site"} = [[],[],[]]
-    #size_list = [,,,]
-    q75, q25 = np.percentile(size_list, [75 ,25])
 
-    remove(train_size,place,size,q75,q25)
-
-    #print(np.sort(size_list))
-    print(q25,q75)
+    remove(train_size,place,size)
