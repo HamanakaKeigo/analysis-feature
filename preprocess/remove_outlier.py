@@ -25,7 +25,8 @@ def get_alldata(train_size,place):
                         Time,Size,IP = pic_feature.get_csv(path+str(i)+".csv")
                     else:
                         Time,Size,IP = pic_feature.get_pcap(path+str(i)+".pcap")
-
+                    
+                    Size = np.abs(Size)
                     datasize[i] = sum(Size)
                 
                 size[s[1]] = datasize
@@ -35,9 +36,6 @@ def get_alldata(train_size,place):
 
 def remove(train_size,place,size):
 
-    
-
-    
     for loc in place:
         with open("../data/sites",'r') as f:
             sites = f.readlines()
@@ -61,7 +59,7 @@ def remove(train_size,place,size):
                     if (size[s[1]][i] < low or size[s[1]][i] > high):
                         print("remove",origin_path,i,size[s[1]][i])
                     else:
-                        shutil.copy(origin_path+str(i)+".pcap",copy_path)
+                        shutil.copy(origin_path+str(i)+".csv",copy_path)
               
 
 

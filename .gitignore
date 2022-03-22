@@ -1,7 +1,5 @@
 data/dataset
-!data/dataset/processed
+!data/dataset/processed/
 *.png
-data/info.csv
-data/info_old.csv
 test/
 *.prof

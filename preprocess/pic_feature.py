@@ -625,13 +625,14 @@ def get_allfeature(Time=[],Size=[],IP=[]):
 
 def get_features(filename = ""):
 
-    
-    #print("open : "+filename)
 
-    if os.path.isfile(filename+".csv"):
-        Time,Size,IP = get_csv(filename+".csv")        
+    if filename.split(".")[-1]=="csv":
+        Time,Size,IP = get_csv(filename)        
+    elif filename.split(".")[-1]=="pcap":
+        Time,Size,IP = get_pcap(filename)
     else:
-        Time,Size,IP = get_pcap(filename+"pcap")
+        print("not supported file type")
+        return
 
     if len(Size)==0:
         return(None)
@@ -690,8 +691,8 @@ def get_csv(filename = ""):
 
 
 def pic_mydata():
-    train_size=150
-    place = ["lib","odins","icn"]
+    train_size=100
+    place = ["icn"]
 
     for loc in place:
         with open("../data/sites",'r') as f:
@@ -701,25 +702,25 @@ def pic_mydata():
                 s = site.split()
                 if s[0] == "#":
                     continue
+                path = "../data/dataset/processed/"+loc+"/"+s[1]
+                filelist = os.listdir(path)
+                #print(files)
                 features=[]
-                for i in range(train_size):
-                    if not os.path.isfile("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i)+".pcap"):
+                for file in filelist:
+                    if len(features)==train_size:
                         break
-                    print("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i)+".pcap")
-                    get = get_features("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i))
+                    print(path+"/"+file)
+                    get = get_features(path+"/"+file)
 
                     feature=[]
                     for g in get:
                         feature.extend(g)
                     features.append(feature)
 
-                    #print(str(i)+" times of " + s[1])
-
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
                 pickle.dump(features,f)
                 f.close()
-            
-                print("get feature of :" + s[1])
+
         #print(site_data)
 
 if __name__ == "__main__":
