@@ -1,4 +1,5 @@
-data/train
+data/dataset
+!data/dataset/processed
 *.png
 data/info.csv
 data/info_old.csv

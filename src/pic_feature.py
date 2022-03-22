@@ -703,10 +703,10 @@ def pic_mydata():
                     continue
                 features=[]
                 for i in range(train_size):
-                    if not os.path.isfile("../data/train/"+loc+"/"+s[1]+"/"+str(i)+".pcap"):
+                    if not os.path.isfile("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i)+".pcap"):
                         break
-                    print("../data/train/"+loc+"/"+s[1]+"/"+str(i)+".pcap")
-                    get = get_features("../data/train/"+loc+"/"+s[1]+"/"+str(i))
+                    print("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i)+".pcap")
+                    get = get_features("../data/dataset/processed/"+loc+"/"+s[1]+"/"+str(i))
 
                     feature=[]
                     for g in get:

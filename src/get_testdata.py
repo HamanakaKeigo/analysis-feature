@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 
 if __name__ == "__main__":
 
-    test_epoch = 1
+    test_epoch = 2
     loc = "icn"
 
     with open("../data/sites",'r') as f:
@@ -20,8 +20,8 @@ if __name__ == "__main__":
             s = site.split()
             if s[0]=="#":
                 continue
-            if not os.path.exists("../data/train/"+loc+"/"+s[1]):
-                os.mkdir("../data/train/"+loc+"/"+s[1])
+            if not os.path.exists("../data/dataset/origin/"+loc+"/"+s[1]):
+                os.mkdir("../data/dataset/origin/"+loc+"/"+s[1])
         
         option = Options()
         option.add_argument("--headless")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 #driver = webdriver.Chrome()
 
                 print(s[1])
-                p = subprocess.Popen(['tcpdump','-w', '../data/train/'+loc+"/"+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
+                p = subprocess.Popen(['tcpdump','-w', '../data/dataset/origin/'+loc+"/"+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
                 driver.get(s[0])    
                
                 p.terminate()
