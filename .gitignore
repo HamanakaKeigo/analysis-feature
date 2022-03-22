@@ -1,5 +1,6 @@
-data/dataset
-!data/dataset/processed/
+data/dataset/origin
+data/dataset/old
 *.png
 test/
 *.prof
+*.pcap
