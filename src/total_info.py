@@ -1,4 +1,4 @@
-
+from sklearn.neighbors import KernelDensity
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -6,9 +6,11 @@ import matlab
 import math
 import sys 
 import csv
+import time
+import cProfile
 
 sys.path.append('../')
-from scipy import integrate
+from my_scipy import integrate
 from my_scipy.stats import gaussian_kde
 #print(sys.path)
 
@@ -125,15 +127,21 @@ def kde_1d(Feature_data=[],sites=None,id=0):
     kde = gaussian_kde(data,bw_method="silverman")
     minx = min(data) - (max(data)-min(data))/2
     maxx = max(data) + (max(data)-min(data))/2
-    xticks = np.linspace(minx, maxx, 1000)
-    
+
+    xticks = np.linspace(minx, maxx, 50)
     z = kde(xticks)
     ax1.plot(xticks,z*len(data),color="k")
-    
-    
+    real_ticks = np.linspace(minx, maxx, 1000)
+    real_z = kde(real_ticks)
+    ax1.plot(real_ticks,real_z*len(data),color="k")
+
+    print(minx,maxx)
 
     Hcf = 0
     Hc = 0
+    integral = lambda x: kde.ev_1p(x) * (( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data)  )) * np.log2(( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data) )) if (kde.ev_1p(x)>0 and kde1.ev_1p(x)>0) else 0
+    
+    
     for site in sites:
         data1 = Feature_data[id][site]
         if len(data1)==0:
@@ -150,20 +158,17 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         #minx = min(data1) - (max(data1)-min(data1))
         #maxx = max(data1) + (max(data1)-min(data1))
 
-        integral = lambda x: kde(x) * (( kde1(x)*len(data1) )/( kde(x)*len(data)  )) * np.log2(( kde1(x)*len(data1) )/( kde(x)*len(data) )) if (kde(x)>0 and kde1(x)>0) else 0
+        
         val, err = integrate.quad(integral,minx,maxx)
         
-        if np.isnan(val):
+        if not np.isnan(val):
             print(site)
-            fig = plt.figure()
-            ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
+            
 
             xticks = np.linspace(minx, maxx, 100)
-            z = kde(xticks)
-            ax1.plot(xticks,z*len(data),color="k")
             z1 = kde1(xticks)
             ax1.plot(xticks,z1*len(data1))
-            plt.show()
+        else:
             continue
         #print(site," val:",val)
 
@@ -172,7 +177,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         Hcf += val
         #print(val)
         #print(err)
-
+    plt.show()
     fig.savefig("../data/plot/kernel/total/"+str(id+1)+".png")
 
 
@@ -183,7 +188,9 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    dim = range(2) #(参照する変数の数)
+    #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
+    dim = range(4)
+    #mutual 0.026685512930465324
     data = []
     min_box = []
     max_box = []
@@ -198,56 +205,80 @@ def kde_multi(Feature_data=[],sites=None):
         max_box.append(maxx)
         box.append([minx,maxx])
     print(box)
-    kde = gaussian_kde(data)
+    kde = gaussian_kde(data,bw_method="silverman")
 
-    
 
-    #グラフ
-    """xticks = np.linspace(min_box[0], max_box[0], 1000)
-    yticks = np.linspace(min_box[1], max_box[1], 1000)
-    xx,yy = np.meshgrid(xticks,yticks)
-    mesh = np.vstack([xx.ravel(),yy.ravel()])
-
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111,xlabel="fd",ylabel="sd")
-
-    z = kde(mesh)
-    Z = z.reshape(len(yticks),len(xticks))
-    ax1.contourf(xx,yy,Z,cmap="Greens")"""
-
-    
     n = len(data[0])
     
     Hcf = 0
     Hc = 0
-    integral = lambda *x: kde(x) * ( (kde1(x)*n1) / (kde(x)*n) ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+    #integral = lambda *x:( kde1(x)*n1 / n ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+    #integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
+    integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1.ev_1p(x),kde.ev_1p(x))
+    all_time=0
     for i,site in enumerate(sites):
         data1 = []
+        if i==1:
+            break
         for j in dim:
             d1 = Feature_data[j][site]
             data1.append(d1)
-        rate = len(data1[0]) / len(data[0])
-        n1 = len(data1[0])
-        
+            n1 = len(data1[0])
+        rate = n1 / n
         Hc += rate*math.log2(rate)
+
         kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
         
         #integral = lambda x,y:kde1([x,y])
-        val, err = integrate.nquad(integral,box)
+        start = time.perf_counter()
+        val, err = integrate.nquad(integral,box,opts = {"limit":10})
+        #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
+        print(site,time.perf_counter() - start,"sec")
+        all_time += time.perf_counter() - start
         print(val)
         Hcf += val
-        """z1 = kde1(mesh)
-        Z1 = z1.reshape(len(yticks),len(xticks))
-        ax1.contourf(xx,yy,Z1,cmap="Greens", alpha=0.5)
-        ax1.scatter(data1[0],data1[1])"""
+    print("total",all_time,"sec")
 
     #range(2): mtual = 1.3904793915869877
-    print("mutual :",Hcf - Hc)
+    print(dim,"dims mutual :",Hcf - Hc)
     plt.show()
 
     return ([Hcf - Hc])
 
-def calc_info(sites=[],target=""):
+def get_points(Feature_data=[],sites=None):
+    dim = range(3)
+    data = []
+    min_box = []
+    max_box = []
+    box = []
+    for i in dim:
+        d = Feature_data[i]["all"][:5]
+        data.append(d)
+        
+        minx = min(d) - (max(d)-min(d))/2
+        min_box.append(minx)
+        maxx = max(d) + (max(d)-min(d))/2
+        max_box.append(maxx)
+        box.append([minx,maxx])
+    print(box)
+    kde = gaussian_kde(data[:5],bw_method="silverman")
+    
+
+    xticks = np.linspace(min_box[0], max_box[0], 1)
+    yticks = np.linspace(min_box[1], max_box[1], 1)
+    zticks = np.linspace(min_box[2], max_box[2], 1)
+    xxx,yyy,zzz = np.meshgrid(xticks,yticks,zticks)
+    #print(xxx)
+    #print(yyy)
+    #print(zzz)
+    
+    mesh = np.vstack([xxx.ravel(),yyy.ravel(),zzz.ravel()])
+    print(mesh.shape)
+    ans = kde(mesh)
+
+    return ans
+
+def calc_info(sites=[]):
 
     information_leakage=[]
     Feature_data = []
@@ -275,9 +306,10 @@ def calc_info(sites=[],target=""):
 
     #test_multi(Feature_data)
     info=[]
-    #for i in range (len(Feature_data)):
+    #for i in range (3):
         #info.append(kde_1d(Feature_data,sites,i))
     info.append(kde_multi(Feature_data,sites))
+    #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     
     return(info)
@@ -285,7 +317,6 @@ def calc_info(sites=[],target=""):
 
 if __name__ == "__main__":
     sites = []
-    target = "wpf"
 
     with open("../data/sites",'r') as f1:
         site_list = f1.readlines()
@@ -293,10 +324,12 @@ if __name__ == "__main__":
             s = site.split()
             if s[0] == "#":
                 continue
-            if (s[2] == target):
-                sites.append(s[1])
+            sites.append(s[1])
 
-    data = calc_info(sites,target)
+    data = calc_info(sites)
+    print(data)
+    """
     with open("../data/info.csv","w") as f:
         writer = csv.writer(f)
         writer.writerows(data)
+    """
