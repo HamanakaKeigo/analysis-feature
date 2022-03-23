@@ -592,6 +592,19 @@ class gaussian_kde(object):
         """
         return self.evaluate(x)
 
+    def ev_1p(self,points):
+        #print(np.array([points]))
+        points = np.array([points])
+        #print(points)
+        
+        #points = np.array([[points[0],points[2]]])
+        d, m = points.shape
+
+        spec = 'double'
+        result = gauss[spec](self.whitening, self.points_ ,points, self.values_ ,  np.float64)
+
+        return result
+        
     def logpdf(self, x):
         """
         Evaluate the log of the estimated pdf on a provided set of points.
