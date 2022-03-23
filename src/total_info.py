@@ -139,7 +139,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
     Hcf = 0
     Hc = 0
-    integral = lambda x: kde.ev_1p(x) * (( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data)  )) * np.log2(( kde1.ev_1p(x)*len(data1) )/( kde.ev_1p(x)*len(data) )) if (kde.ev_1p(x)>0 and kde1.ev_1p(x)>0) else 0
+    integral = lambda x: kde.evaluate(x) * (( kde1.evaluate(x)*len(data1) )/( kde.evaluate(x)*len(data)  )) * np.log2(( kde1.evaluate(x)*len(data1) )/( kde.evaluate(x)*len(data) )) if (kde.evaluate(x)>0 and kde1.evaluate(x)>0) else 0
     
     
     for site in sites:
@@ -163,7 +163,6 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         
         if not np.isnan(val):
             print(site)
-            
 
             xticks = np.linspace(minx, maxx, 100)
             z1 = kde1(xticks)
@@ -244,7 +243,7 @@ def kde_multi(Feature_data=[],sites=None):
             start = time.perf_counter()
             val, err = integrate.nquad(integral,box,opts = {"limit":10})
             #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
-            print(site,time.perf_counter() - start,"sec")
+            print(site,time.perf_counter() - start,"sec :",i)
             all_time += time.perf_counter() - start
             print(val)
             Hcf += val
@@ -313,9 +312,9 @@ def calc_info(sites=[]):
 
 
     #test_multi(Feature_data)
-    #for i in range (3):
-        #info.append(kde_1d(Feature_data,sites,i))
-    info = kde_multi(Feature_data,sites)
+    for i in range (3):
+        print( kde_1d(Feature_data,sites,i) )
+    #info = kde_multi(Feature_data,sites)
     #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     

@@ -25,6 +25,7 @@ def get_alldata(train_size,place):
                         Time,Size,IP = pic_feature.get_csv(path+str(i)+".csv")
                     else:
                         Time,Size,IP = pic_feature.get_pcap(path+str(i)+".pcap")
+                        print("pic pcap")
                     
                     Size = np.abs(Size)
                     datasize[i] = sum(Size)
@@ -65,7 +66,7 @@ def remove(train_size,place,size):
 
 
 if __name__ == "__main__":
-    train_size=1
+    train_size=150
     place = ["icn"]
 
     size,size_list = get_alldata(train_size,place)
