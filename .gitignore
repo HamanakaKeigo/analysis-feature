@@ -1,3 +1,6 @@
-data/train
+data/dataset/origin
+data/dataset/old
+data/dataset/train
 *.png
+*.pcap
 test/

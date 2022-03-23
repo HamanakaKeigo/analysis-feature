@@ -10,6 +10,8 @@ scipy = "1.6.2"
 matlab = "0.1"
 matplotlib = "3.4.1"
 pyshark = "0.4.3"
+sklearn = "^0.0"
+Cython = "^0.29.28"
 
 [tool.poetry.dev-dependencies]
 

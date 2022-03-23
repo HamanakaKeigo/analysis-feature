@@ -1,3 +1,4 @@
+from sklearn.neighbors import KernelDensity
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -188,61 +189,70 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
     #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
-    dim = range(4)
-    #mutual 0.026685512930465324
-    data = []
-    min_box = []
-    max_box = []
-    box = []
-    for i in dim:
-        d = Feature_data[i]["all"]
-        data.append(d)
+    dim = int(args[-1])
+    dis = 50/dim
+    cumul = np.linspace(dis-1, 49, dim,dtype=np.int32)
+    cdn = np.linspace(dis+49, 99, dim,dtype=np.int32)
+    tcumul = np.linspace(dis+99, 149, dim,dtype=np.int32)
+    cumul = np.insert(cumul,0,0)
+    cdn = np.insert(cdn,0,49)
+    tcumul = np.insert(tcumul,0,99)
+    print("cumul",cumul)
+    print("cdn",cdn)
+    print("tcumul",tcumul)
+    dataset= [["cumul",cumul],["cdn",cdn],["tcumul",tcumul]]
+
+    r = []
+    for name,dim in dataset:
+
+        #mutual 0.026685512930465324
+        data = []
+        box = []
+        for i in dim:
+            d = Feature_data[i]["all"]
+            data.append(d)
+            
+            minx = min(d) - (max(d)-min(d))/2
+            maxx = max(d) + (max(d)-min(d))/2
+            box.append([minx,maxx])
+        print(box)
+        kde = gaussian_kde(data,bw_method="silverman")
+
+
+        n = len(data[0])
         
-        minx = min(d) - (max(d)-min(d))/2
-        min_box.append(minx)
-        maxx = max(d) + (max(d)-min(d))/2
-        max_box.append(maxx)
-        box.append([minx,maxx])
-    print(box)
-    kde = gaussian_kde(data,bw_method="silverman")
+        Hcf = 0
+        Hc = 0
+        #integral = lambda *x:( kde1(x)*n1 / n ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
+        #integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
+        integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1.ev_1p(x),kde.ev_1p(x))
+        all_time=0
+        for i,site in enumerate(sites):
+            data1 = []
+            for j in dim:
+                d1 = Feature_data[j][site]
+                data1.append(d1)
+                n1 = len(data1[0])
+            rate = n1 / n
+            Hc += rate*math.log2(rate)
 
+            kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
+            
+            #integral = lambda x,y:kde1([x,y])
+            start = time.perf_counter()
+            val, err = integrate.nquad(integral,box,opts = {"limit":10})
+            #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
+            print(site,time.perf_counter() - start,"sec")
+            all_time += time.perf_counter() - start
+            print(val)
+            Hcf += val
+        print("total",all_time,"sec")
 
-    n = len(data[0])
-    
-    Hcf = 0
-    Hc = 0
-    #integral = lambda *x:( kde1(x)*n1 / n ) * np.log2(( kde1(x)*n1)/( kde(x)*n )) if (kde(x)>0 and kde1(x)>0) else 0
-    #integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1(x),kde(x))
-    integral = lambda *x:(lambda z1,z:(z1*n1/n)*np.log2((z1*n1)/(z*n)) if (z>0 and z1>0) else 0) (kde1.ev_1p(x),kde.ev_1p(x))
-    all_time=0
-    for i,site in enumerate(sites):
-        data1 = []
-        if i==1:
-            break
-        for j in dim:
-            d1 = Feature_data[j][site]
-            data1.append(d1)
-            n1 = len(data1[0])
-        rate = n1 / n
-        Hc += rate*math.log2(rate)
+        #range(2): mtual = 1.3904793915869877
+        print(dim,"dims mutual :",Hcf - Hc)
+        r.append([name,Hcf - Hc])
 
-        kde1 = gaussian_kde(data1,cov_inv=[kde.inv_cov,kde.covariance])
-        
-        #integral = lambda x,y:kde1([x,y])
-        start = time.perf_counter()
-        val, err = integrate.nquad(integral,box,opts = {"limit":10})
-        #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
-        print(site,time.perf_counter() - start,"sec")
-        all_time += time.perf_counter() - start
-        print(val)
-        Hcf += val
-    print("total",all_time,"sec")
-
-    #range(2): mtual = 1.3904793915869877
-    print(dim,"dims mutual :",Hcf - Hc)
-    plt.show()
-
-    return ([Hcf - Hc])
+    return (r)
 
 def get_points(Feature_data=[],sites=None):
     dim = range(3)
@@ -282,7 +292,6 @@ def calc_info(sites=[]):
     information_leakage=[]
     Feature_data = []
 
-
     for i,site in enumerate(sites):
         #default
         with open("../data/features/icn/"+site,"rb") as feature_set:
@@ -290,7 +299,7 @@ def calc_info(sites=[]):
             #[site][feature] >> [feature][site]
             
             for i in range(len(data)):
-                if(i==50):
+                if i==10:
                     break
                 for j in range(len(data[i])):                    
                     if(len(Feature_data)<=j):
@@ -304,10 +313,9 @@ def calc_info(sites=[]):
 
 
     #test_multi(Feature_data)
-    info=[]
     #for i in range (3):
         #info.append(kde_1d(Feature_data,sites,i))
-    info.append(kde_multi(Feature_data,sites))
+    info = kde_multi(Feature_data,sites)
     #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     
@@ -316,6 +324,8 @@ def calc_info(sites=[]):
 
 if __name__ == "__main__":
     sites = []
+    args = sys.argv
+    
 
     with open("../data/sites",'r') as f1:
         site_list = f1.readlines()
@@ -327,8 +337,8 @@ if __name__ == "__main__":
 
     data = calc_info(sites)
     print(data)
-    """
-    with open("../data/info.csv","w") as f:
+    
+    with open("../data/100s-10t-10l-"+args[-1]+"d.csv","w") as f:
         writer = csv.writer(f)
         writer.writerows(data)
-    """
+    

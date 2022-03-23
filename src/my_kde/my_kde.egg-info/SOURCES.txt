@@ -1,0 +1,6 @@
+my_kde.c
+setup.py
+my_kde.egg-info/PKG-INFO
+my_kde.egg-info/SOURCES.txt
+my_kde.egg-info/dependency_links.txt
+my_kde.egg-info/top_level.txt
