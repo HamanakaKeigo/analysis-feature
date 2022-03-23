@@ -189,7 +189,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
     #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
-    dim = range(3)
+    dim = range(4)
     #mutual 0.026685512930465324
     data = []
     min_box = []
@@ -231,7 +231,7 @@ def kde_multi(Feature_data=[],sites=None):
         
         #integral = lambda x,y:kde1([x,y])
         start = time.perf_counter()
-        val, err = integrate.nquad(integral,box)
+        val, err = integrate.nquad(integral,box,opts = {"limit":10})
         #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
         print(site,time.perf_counter() - start,"sec")
         all_time += time.perf_counter() - start
