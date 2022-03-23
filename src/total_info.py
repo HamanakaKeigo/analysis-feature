@@ -10,7 +10,7 @@ import time
 import cProfile
 
 sys.path.append('../')
-from my_scipy import integrate
+from scipy import integrate
 from my_scipy.stats import gaussian_kde
 #print(sys.path)
 
