@@ -32,10 +32,9 @@ from numpy import (asarray, atleast_2d, reshape, zeros, newaxis, dot, exp, pi,
 import numpy as np
 
 # Local imports.
-from . import mvn
-from ._stats import gaussian_kernel_estimate
+from scipy.stats import mvn
+from scipy.stats._stats import gaussian_kernel_estimate
 import math
-
 from my_kde import gauss
 
 __all__ = ['gaussian_kde']
