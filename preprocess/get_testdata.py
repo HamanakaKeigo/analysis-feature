@@ -8,10 +8,11 @@ import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
+import time
 
 if __name__ == "__main__":
 
-    test_epoch = 2
+    test_epoch = 150
     loc = "icn"
 
     with open("../data/sites",'r') as f:
@@ -21,27 +22,31 @@ if __name__ == "__main__":
             if s[0]=="#":
                 continue
             if not os.path.exists("../data/dataset/origin/"+loc+"/"+s[1]):
-                os.mkdir("../data/dataset/origin/"+loc+"/"+s[1])
+                os.makedirs("../data/dataset/origin/"+loc+"/"+s[1])
         
         option = Options()
         option.add_argument("--headless")
-        for i in range(test_epoch):
+        for i in range(1,test_epoch):
             print("get "+str(i)+" times")
             for site in sites:
                 s = site.split()
                 if s[0]=="#":
                     continue
 
-                driver = webdriver.Chrome(options=option)
-                #driver = webdriver.Chrome()
+                #driver = webdriver.Chrome(options=option)
+                driver = webdriver.Chrome()
 
-                print(s[1])
+                print(str(i)+"th"+s[1])
                 p = subprocess.Popen(['tcpdump','-w', '../data/dataset/origin/'+loc+"/"+s[1]+'/'+str(i)+'.pcap'], stdout=subprocess.PIPE)
-                driver.get(s[0])    
+                driver.get(s[0])
+                time.sleep(1)
+                driver.save_screenshot('../data/dataset/origin/'+loc+"/"+s[1]+'/'+str(i)+'.png')
                
                 p.terminate()
                 driver.delete_all_cookies()
                 driver.quit()
+                time.sleep(1)
+            time.sleep(60)
                 
         
         

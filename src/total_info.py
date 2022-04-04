@@ -131,11 +131,11 @@ def kde_1d(Feature_data=[],sites=None,id=0):
     xticks = np.linspace(minx, maxx, 50)
     z = kde(xticks)
     ax1.plot(xticks,z*len(data),color="k")
-    real_ticks = np.linspace(minx, maxx, 1000)
+    real_ticks = np.linspace(minx, maxx, 100)
     real_z = kde(real_ticks)
     ax1.plot(real_ticks,real_z*len(data),color="k")
 
-    print(minx,maxx)
+    #print(minx,maxx)
 
     Hcf = 0
     Hc = 0
@@ -162,8 +162,6 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         val, err = integrate.quad(integral,minx,maxx)
         
         if not np.isnan(val):
-            print(site)
-
             xticks = np.linspace(minx, maxx, 100)
             z1 = kde1(xticks)
             ax1.plot(xticks,z1*len(data1))
@@ -176,7 +174,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         Hcf += val
         #print(val)
         #print(err)
-    plt.show()
+    #plt.show()
     fig.savefig("../data/plot/kernel/total/"+str(id+1)+".png")
 
 
@@ -310,10 +308,12 @@ def calc_info(sites=[]):
                     Feature_data[j][site].append(data[i][j])
                     Feature_data[j]["all"].append(data[i][j])
 
-
+    info=[]
     #test_multi(Feature_data)
-    for i in range (3):
-        print( kde_1d(Feature_data,sites,i) )
+    print(len(Feature_data))
+    for i in range (len(Feature_data)):
+        info.append(kde_1d(Feature_data,sites,i))
+        print( info[-1] )
     #info = kde_multi(Feature_data,sites)
     #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
