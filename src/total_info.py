@@ -185,15 +185,11 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
-    #dim = [0,4,9,14,19,24,29,34,39,44,49] #(参照する変数の数)
-    dim = int(args[-1])
-    dis = 50/dim
-    cumul = np.linspace(dis-1, 49, dim,dtype=np.int32)
-    cdn = np.linspace(dis+49, 99, dim,dtype=np.int32)
-    tcumul = np.linspace(dis+99, 149, dim,dtype=np.int32)
-    cumul = np.insert(cumul,0,0)
-    cdn = np.insert(cdn,0,49)
-    tcumul = np.insert(tcumul,0,99)
+    dim = 2
+    cumul = np.linspace(0, 49, dim,dtype=np.int32)
+    cdn = np.linspace(50, 99, dim,dtype=np.int32)
+    tcumul = np.linspace(100, 149, dim,dtype=np.int32)
+
     print("cumul",cumul)
     print("cdn",cdn)
     print("tcumul",tcumul)
@@ -202,7 +198,6 @@ def kde_multi(Feature_data=[],sites=None):
     r = []
     for name,dim in dataset:
 
-        #mutual 0.026685512930465324
         data = []
         box = []
         for i in dim:
@@ -239,7 +234,7 @@ def kde_multi(Feature_data=[],sites=None):
             
             #integral = lambda x,y:kde1([x,y])
             start = time.perf_counter()
-            val, err = integrate.nquad(integral,box,opts = {"limit":10})
+            val, err = integrate.nquad(integral,box)
             #val,err = cProfile.run('integrate.nquad(integral,box,opts = {"limit":10000})')
             print(site,time.perf_counter() - start,"sec :",i)
             all_time += time.perf_counter() - start
@@ -310,11 +305,11 @@ def calc_info(sites=[]):
 
     info=[]
     #test_multi(Feature_data)
-    print(len(Feature_data))
-    for i in range (len(Feature_data)):
-        info.append(kde_1d(Feature_data,sites,i))
-        print( info[-1] )
-    #info = kde_multi(Feature_data,sites)
+    #print(len(Feature_data))
+    #for i in range (len(Feature_data)):
+    #    info.append(kde_1d(Feature_data,sites,i))
+    #    print( info[-1] )
+    info = kde_multi(Feature_data,sites)
     #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     

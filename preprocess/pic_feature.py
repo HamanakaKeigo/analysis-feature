@@ -592,7 +592,7 @@ def get_allfeature(Time=[],Size=[],IP=[]):
 
     features=[]
     
-    
+    """
     features.append(save_PktCount(Size))
     features.append(save_time(Time,Size))
     ngram=[]
@@ -610,12 +610,12 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     features.append(save_cumul(Size))
     if(len(IP)>0):
         features.append(save_CDNburst(Time,Size,IP))
-    
     """
+    
     features.append(save_Cumul50(Size))
     features.append(save_CDNburst(Time,Size,IP))
     features.append(save_timesp(Time,Size))
-    """
+    
 
     return features
 
