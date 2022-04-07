@@ -32,7 +32,7 @@ def get_alldata(train_size,place):
                     
                     Size = np.abs(Size)
                     datasize[i] = sum(Size)
-                    datatime[i] = Time[-1]
+                    datatime[i] = Time[-1]-Time[0]
                 
                 size[s[1]] = datasize
                 time[s[1]] = datatime
@@ -63,7 +63,7 @@ def remove(train_size,place,size,time):
                 time75, time25 = np.percentile(time[s[1]], [75 ,25])
                 timelow = time25 - 1.5*(time75-time25)
                 timehigh = time75 + 1.5*(time75-time25)
-                print("size low,high",timehigh,timelow)
+                print("time low,high",timehigh,timelow)
                 
                 for i in range(train_size):
                     if (size[s[1]][i] < sizelow or size[s[1]][i] > sizehigh):
