@@ -52,8 +52,9 @@ def remove(train_size,place,size,time):
 
                 origin_path = "../data/dataset/origin/"+loc+"/"+s[1]+"/"
                 copy_path = "../data/dataset/processed/"+loc+"/"+s[1]
-                if not os.path.exists(copy_path):
-                    os.makedirs(copy_path)
+                if os.path.exists(copy_path):
+                    os.remove(copy_path)
+                os.makedirs(copy_path)
 
                 size75, size25 = np.percentile(size[s[1]], [75 ,25])
                 sizelow = size25 - 1.5*(size75-size25)
