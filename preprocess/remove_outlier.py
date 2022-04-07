@@ -68,7 +68,7 @@ def remove(train_size,place,size,time):
                 for i in range(train_size):
                     if (size[s[1]][i] < sizelow or size[s[1]][i] > sizehigh):
                         print("remove for size",origin_path,i,size[s[1]][i])
-                    else if(time[s[1]][i] < timelow or time[s[1]][i] > timehigh):
+                    elif(time[s[1]][i] < timelow or time[s[1]][i] > timehigh):
                         print("remove for time",origin_path,i,time[s[1]][i])
                     else:
                         shutil.copy(origin_path+str(i)+".csv",copy_path)
