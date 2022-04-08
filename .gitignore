@@ -4,3 +4,4 @@ test
 *.prof
 *.pcap
 *.png
+.DS_Store
