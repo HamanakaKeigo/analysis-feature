@@ -688,7 +688,7 @@ def get_csv(filename = ""):
 
 def pic_mydata():
     train_size=100
-    place = ["icn"]
+    place = ["odins"]
 
     for loc in place:
         with open("../data/sites",'r') as f:
@@ -712,7 +712,7 @@ def pic_mydata():
                     for g in get:
                         feature.extend(g)
                     features.append(feature)
-
+                print(len(features))
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
                 pickle.dump(features,f)
                 f.close()
