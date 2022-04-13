@@ -86,7 +86,7 @@ def calc_kernel(sites=[],loc=""):
 
         """
     infos = []
-    for i in range(3170,len(Feature_data)):
+    for i in range(len(Feature_data)):
         infos.append(info(Feature_data,i,sites,loc))
 
     return([infos])
@@ -161,7 +161,7 @@ def info(Feature_data,key,sites,loc):
 
 if __name__ == "__main__":
     sites = []
-    loc = "icn"
+    loc = "odins"
 
 
     with open("../data/sites",'r') as f1:
