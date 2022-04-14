@@ -702,17 +702,19 @@ def pic_mydata():
                 filelist = os.listdir(path)
                 #print(files)
                 features=[]
-                for file in filelist:
+                for i in range(len(filelist)):
                     if len(features)==train_size:
                         break
-                    #print(path+"/"+file)
-                    get = get_features(path+"/"+file)
+                    if not os.path.isfile(path+"/"+str(i)+".csv"):
+                        continue
+                    print(path+"/"+str(i)+".csv")
+                    get = get_features(path+"/"+str(i)+".csv")
 
                     feature=[]
                     for g in get:
                         feature.extend(g)
                     features.append(feature)
-                print(path,len(features))
+                print(s[1],len(features))
                 if(len(features) < train_size):
                     print("train data is less tha train_size",s[1])
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
