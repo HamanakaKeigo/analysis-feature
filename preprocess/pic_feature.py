@@ -705,14 +705,16 @@ def pic_mydata():
                 for file in filelist:
                     if len(features)==train_size:
                         break
-                    print(path+"/"+file)
+                    #print(path+"/"+file)
                     get = get_features(path+"/"+file)
 
                     feature=[]
                     for g in get:
                         feature.extend(g)
                     features.append(feature)
-                print(len(features))
+                print(path,len(features))
+                if(len(features) < train_size):
+                    print("train data is less tha train_size",s[1])
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
                 pickle.dump(features,f)
                 f.close()
