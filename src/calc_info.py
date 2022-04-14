@@ -8,27 +8,27 @@ import pickle
 import matlab
 from scipy import integrate
 from scipy.integrate import cumtrapz
-import sympy as sym
 import math
 import scipy.io
 import csv
+import os
 
 
-def calc_kernel(sites=[],target=""):
+def calc_kernel(sites=[],loc=""):
 
     information_leakage=[]
     Feature_data = []
 
 
     for site in sites:
-
+    
         #default
         with open("../data/features/icn/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
             
             for i in range(len(data)):
-                if(i==50):
+                if(i==150):
                     break
                 for j in range(len(data[i])):
 
@@ -87,18 +87,27 @@ def calc_kernel(sites=[],target=""):
         """
     infos = []
     for i in range(len(Feature_data)):
-        infos.append(info(Feature_data,i,sites))
+        infos.append(info(Feature_data,i,sites,loc))
 
-    return(infos)
+    return([infos])
         
 
         #Feature_data[key][s[1]] = np.reshape(Feature_data[key][s[1]],(-1,1))
-def info(Feature_data,key,sites):
+def info(Feature_data,key,sites,loc):
         
     fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
     fac = len(fd) ** -0.2
     width = abs((fac**2)*np.var(fd,ddof=1))
     bw = 1.06*(width**0.5)
+    if bw==0:
+        Hc=0
+        print("bw=",bw)
+        with open("../data/plot/kernel/"+loc+"/"+str(key+1)+".csv", 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow([0])
+        return(0)
+        
+
     #print(str(key) + "th bw = " + str(bw))
     xticks = np.linspace(fd.min()-bw*4, fd.max()+bw*4, 10000)
     Xticks = np.reshape(xticks,(-1,1))
@@ -108,11 +117,10 @@ def info(Feature_data,key,sites):
     
     fig = plt.figure()
     ax1 = fig.add_subplot(111,xlabel=key,ylabel="rate",label="all")
-    ax1.plot(xticks,estimate*len(fd))
+    #ax1.plot(xticks,estimate*len(fd))
 
 
     #print(estimate)
-    information_leakage=[]
     Hcf=0
     Hc=0
     for site in sites:
@@ -134,22 +142,26 @@ def info(Feature_data,key,sites):
 
         #print("mutual of " + site + " : " + str(mutual[-1]))
         Hcf+=mutual[-1]
-        ax1.plot(xticks,estimate_s*len(sfd),label=site)
+        ax1.plot(xticks,estimate_s)
 
     #print("total Hcf : " + str(-Hcf))
     #print("total Hc : " + str(-Hc))
-    print(key+1,"th total mutual : "+str(Hcf-Hc))
-    information_leakage.append(Hcf-Hc)
-    plt.legend()
+    info = Hcf-Hc
+    print(key+1,"/",len(Feature_data),"th total mutual : ",info)
     #plt.show()
-    fig.savefig("../data/plot/kernel/"+target+"/"+str(key+1)+".png")
+    
+    fig.savefig("../data/plot/kernel/"+loc+"/"+str(key+1)+".png")
+    with open("../data/plot/kernel/"+loc+"/"+str(key+1)+".csv", 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow([info])
+    
     print("--------------------")
-    return([information_leakage])
+    return(info)
 
 
 if __name__ == "__main__":
     sites = []
-    target = "wpf"
+    loc = "odins"
 
 
     with open("../data/sites",'r') as f1:
@@ -158,21 +170,22 @@ if __name__ == "__main__":
             s = site.split()
             if s[0] == "#":
                 continue
-            if (s[2] == target):
-                sites.append(s[1])
+            sites.append(s[1])
 
+    if not os.path.isdir("../data/plot/kernel/"+loc):
+        os.makedirs("../data/plot/kernel/"+loc)
+    data = calc_kernel(sites,loc)
+    print(data)
 
-    data = calc_kernel(sites,target)
-
-    """fig = plt.figure()
+    fig = plt.figure()
     ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
     ax1.plot(data)
     #plt.show()
-    fig.savefig("../data/"+target+"_data.png")"""
+    fig.savefig("../data/"+loc+"_data.png")
 
 
     #f = open('../data/plot/feature_info/'+target, 'wb')
-    f = open('../data/plot/feature_info/'+target, 'wb')
+    f = open('../data/plot/feature_info/'+loc, 'wb')
     pickle.dump(data,f)
     f.close()
 

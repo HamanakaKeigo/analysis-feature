@@ -592,7 +592,7 @@ def get_allfeature(Time=[],Size=[],IP=[]):
 
     features=[]
     
-    """
+    
     features.append(save_PktCount(Size))
     features.append(save_time(Time,Size))
     ngram=[]
@@ -603,23 +603,19 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     features.append(save_intI(Size))
     features.append(save_intII_III(Size))
     features.append(save_dist(Size))
-    features.append(save_dist(Size))
+    #features.append(save_dist(Size))
     features.append(save_burst(Size))
     features.append(save_ht(Size))
     features.append(save_PktSec(Time,Size))
     features.append(save_cumul(Size))
     if(len(IP)>0):
         features.append(save_CDNburst(Time,Size,IP))
-    """
-    """
-    Time100 = save_time100(Time,Size)
-    inburst = save_inburst(Size)
-    indist = save_indist(Size)
-    """
+    
     
     features.append(save_Cumul50(Size))
     features.append(save_CDNburst(Time,Size,IP))
     features.append(save_timesp(Time,Size))
+    
 
     return features
 
@@ -692,7 +688,7 @@ def get_csv(filename = ""):
 
 def pic_mydata():
     train_size=100
-    place = ["icn"]
+    place = ["odins"]
 
     for loc in place:
         with open("../data/sites",'r') as f:
@@ -704,20 +700,19 @@ def pic_mydata():
                     continue
                 path = "../data/dataset/processed/"+loc+"/"+s[1]
                 filelist = os.listdir(path)
-                print(len(filelist))
                 #print(files)
                 features=[]
                 for file in filelist:
                     if len(features)==train_size:
                         break
-                    #print(path+"/"+file)
+                    print(path+"/"+file)
                     get = get_features(path+"/"+file)
 
                     feature=[]
                     for g in get:
                         feature.extend(g)
                     features.append(feature)
-
+                print(len(features))
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
                 pickle.dump(features,f)
                 f.close()
