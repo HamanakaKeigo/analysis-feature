@@ -44,14 +44,14 @@ if not os.path.isdir("../data/plot/category/"+loc):
 for i in range(len(data)):
     print(str(i+1) + "th = " + str(data[i]))
 """
-srt = sorted(data,reverse=True)
-art = np.argsort(data)
+srt = sorted(data[:3093],reverse=True)
+art = np.argsort(data[:3093])
 print(art[-100:])
 print(data[3031],srt[99])
 fig = plt.figure()
 ax1 = fig.add_subplot(111,xlabel="index",ylabel="rate")
-ax1.plot(range(len(data)),data)
-ax1.plot(range(len(data)),[srt[99]]*len(data))
+ax1.plot(range(len(data[:3093])),data[:3093])
+ax1.plot(range(len(data[:3093])),[srt[99]]*len(data[:3093]))
 plt.ylim(0,1)
 fig.savefig("../data/plot/category/"+loc+"/all.png")
 plt.show()
@@ -193,14 +193,20 @@ fig.set_figheight(5)
 fig.set_figwidth(8)
 #plt.rcParams['figure.subplot.bottom'] = 0.5
 ax1 = fig.add_subplot(111,xlabel="feature index",ylabel="information leakage")
-ax1.plot(data[-150:-101],label="CUMUL")
+ax1.scatter(range(50),data[-150:-100],label="CUMUL")
 plt.ylim(0,1)
 
+srt = sorted(data[-150:-100],reverse=True)
+art = np.argsort(data[-150:-100])
+print(srt[0],max(data[-150:-100]),art[-1],data[-150:-101][art[-1]])
+
 #ax2 = fig.add_subplot(132,xlabel="index",label="CDNburst")
-ax1.plot(data[-100:-51],label="CDNburst")
+ax1.scatter(range(50),data[-100:-50],label="CDNburst")
+
 
 #ax3 = fig.add_subplot(133,xlabel="index",label="timesplit")
-ax1.plot(data[-50:-1],label="Time cumul")
+ax1.scatter(range(50),data[-50:],label="Time cumul")
+
 
 plt.xlabel("feature index",fontsize=17)
 plt.ylabel("information leakage",fontsize=17)
