@@ -188,10 +188,12 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
+    print(len(Feature_data))
     dim = 2
-    cumul = np.linspace(0, 49, dim,dtype=np.int32)
-    cdn = np.linspace(50, 99, dim,dtype=np.int32)
-    tcumul = np.linspace(100, 149, dim,dtype=np.int32)
+    start = 3093
+    cumul = np.linspace(start+0, start+49, dim,dtype=np.int32)
+    cdn = np.linspace(start+50, start+99, dim,dtype=np.int32)
+    tcumul = np.linspace(start+100, start+149, dim,dtype=np.int32)
 
     print("cumul",cumul)
     print("cdn",cdn)
@@ -224,7 +226,7 @@ def kde_multi(Feature_data=[],sites=None):
         all_time=0
         for i,site in enumerate(sites):
             data1 = []
-            if i==10:
+            if i==120:
                 break
             for j in dim:
                 d1 = Feature_data[j][site]
@@ -284,14 +286,14 @@ def get_points(Feature_data=[],sites=None):
 
     return ans
 
-def calc_info(sites=[]):
+def calc_info(sites=[],loc=""):
 
     information_leakage=[]
     Feature_data = []
 
     for i,site in enumerate(sites):
         #default
-        with open("../data/features/icn/"+site,"rb") as feature_set:
+        with open("../data/features/"+loc+"/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
             
@@ -309,10 +311,10 @@ def calc_info(sites=[]):
     info=[]
     #test_multi(Feature_data)
     #print(len(Feature_data))
-    for i in range (len(Feature_data)):
-        info.append(kde_1d(Feature_data,sites,i))
+    #for i in range (len(Feature_data)):
+    #    info.append(kde_1d(Feature_data,sites,i))
     #    print( info[-1] )
-    #info = kde_multi(Feature_data,sites)
+    info = kde_multi(Feature_data,sites)
     #info.append(get_points(Feature_data))
     #test_1d(Feature_data)
     
@@ -322,6 +324,7 @@ def calc_info(sites=[]):
 if __name__ == "__main__":
     sites = []
     args = sys.argv
+    loc = "odins"
     
 
     with open("../data/sites",'r') as f1:
@@ -332,7 +335,7 @@ if __name__ == "__main__":
                 continue
             sites.append(s[1])
 
-    data = calc_info(sites)
+    data = calc_info(sites,loc)
     print(data)
     
     with open("../data/info.csv","w") as f:
