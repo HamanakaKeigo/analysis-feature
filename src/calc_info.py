@@ -12,6 +12,7 @@ import math
 import scipy.io
 import csv
 import os
+import shutil
 
 
 def calc_kernel(sites=[],loc=""):
@@ -174,7 +175,7 @@ if __name__ == "__main__":
 
     if os.path.isdir("../data/plot/kernel/"+loc):
         if os.path.isdir("../data/plot/kernel/"+loc+"(old)"):
-            os.remove("../data/plot/kernel/"+loc+"(old)")
+            shutil.rmtree("../data/plot/kernel/"+loc+"(old)")
         os.rename("../data/plot/kernel/"+loc,"../data/plot/kernel/"+loc+"(old)")
     os.makedirs("../data/plot/kernel/"+loc)
     data = calc_kernel(sites,loc)
