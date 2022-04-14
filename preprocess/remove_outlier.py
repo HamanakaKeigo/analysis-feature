@@ -18,8 +18,8 @@ def get_alldata(train_size,place):
                     continue
                 path = "../data/dataset/origin/"+loc+"/"+s[1]+"/"
 
-                datasize = [0]*train_size
-                datatime = [0]*train_size
+                datasize = []
+                datatime = []
 
                 for i in range(train_size):
                     if not os.path.isfile(path +str(i)+ ".pcap"):
@@ -31,8 +31,8 @@ def get_alldata(train_size,place):
                         print("pic pcap")
                     
                     Size = np.abs(Size)
-                    datasize[i] = sum(Size)
-                    datatime[i] = Time[-1]-Time[0]
+                    datasize.append(sum(Size))
+                    datatime.append(Time[-1]-Time[0])
                 
                 size[s[1]] = datasize
                 time[s[1]] = datatime
@@ -66,11 +66,15 @@ def remove(train_size,place,size,time):
                 timehigh = time75 + 1.5*(time75-time25)
                 print("time low,high",timehigh,timelow)
                 
+                skip=0
                 for i in range(train_size):
-                    if (size[s[1]][i] < sizelow or size[s[1]][i] > sizehigh):
-                        print("remove for size",origin_path,i,size[s[1]][i])
-                    elif(time[s[1]][i] < timelow or time[s[1]][i] > timehigh):
-                        print("remove for time",origin_path,i,time[s[1]][i])
+                    if not os.path.isfile(origin_path +str(i)+ ".pcap"):
+                        skip+=1
+                        continue
+                    if (size[s[1]][i-skip] < sizelow or size[s[1]][i-skip] > sizehigh):
+                        print("remove for size",origin_path,i,size[s[1]][i-skip])
+                    elif(time[s[1]][i-skip] < timelow or time[s[1]][i-skip] > timehigh):
+                        print("remove for time",origin_path,i,time[s[1]][i-skip])
                     else:
                         shutil.copy(origin_path+str(i)+".csv",copy_path)
               
