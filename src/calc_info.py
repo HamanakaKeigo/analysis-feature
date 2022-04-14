@@ -23,7 +23,7 @@ def calc_kernel(sites=[],loc=""):
     for site in sites:
     
         #default
-        with open("../data/features/icn/"+site,"rb") as feature_set:
+        with open("../data/features/"+loc+"/"+site,"rb") as feature_set:
             data = pickle.load(feature_set)
             #[site][feature] >> [feature][site]
             
@@ -109,7 +109,7 @@ def info(Feature_data,key,sites,loc):
         
 
     #print(str(key) + "th bw = " + str(bw))
-    xticks = np.linspace(fd.min()-bw*4, fd.max()+bw*4, 10000)
+    xticks = np.linspace(fd.min()-bw*4, fd.max()+bw*4, 1000)
     Xticks = np.reshape(xticks,(-1,1))
 
     kde = KernelDensity(kernel="gaussian",bandwidth=bw).fit(fd)
@@ -172,8 +172,9 @@ if __name__ == "__main__":
                 continue
             sites.append(s[1])
 
-    if not os.path.isdir("../data/plot/kernel/"+loc):
-        os.makedirs("../data/plot/kernel/"+loc)
+    if os.path.isdir("../data/plot/kernel/"+loc):
+        os.rename("../data/plot/kernel/"+loc,"../data/plot/kernel/"+loc+"(old)")
+    os.makedirs("../data/plot/kernel/"+loc)
     data = calc_kernel(sites,loc)
     print(data)
 

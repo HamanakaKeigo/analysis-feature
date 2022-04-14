@@ -79,7 +79,7 @@ def remove(train_size,place,size,time):
 
 if __name__ == "__main__":
     train_size=150
-    place = ["icn"]
+    place = ["odins"]
 
     size,time,size_list = get_alldata(train_size,place)
 
