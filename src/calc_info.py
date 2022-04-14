@@ -173,11 +173,8 @@ if __name__ == "__main__":
                 continue
             sites.append(s[1])
 
-    if os.path.isdir("../data/plot/kernel/"+loc):
-        if os.path.isdir("../data/plot/kernel/"+loc+"(old)"):
-            shutil.rmtree("../data/plot/kernel/"+loc+"(old)")
-        os.rename("../data/plot/kernel/"+loc,"../data/plot/kernel/"+loc+"(old)")
-    os.makedirs("../data/plot/kernel/"+loc)
+    if not os.path.isdir("../data/plot/kernel/"+loc):
+        os.makedirs("../data/plot/kernel/"+loc)
     data = calc_kernel(sites,loc)
     print(data)
 
