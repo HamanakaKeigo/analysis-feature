@@ -15,86 +15,64 @@ import os
 import shutil
 
 
-def calc_kernel(sites=[],loc=""):
+def calc_kernel(sites=[],place="",savedir=""):
 
-    information_leakage=[]
     Feature_data = []
 
 
-    for site in sites:
-    
-        #default
-        with open("../data/features/"+loc+"/"+site,"rb") as feature_set:
-            data = pickle.load(feature_set)
-            #[site][feature] >> [feature][site]
-            
-            for i in range(len(data)):
-                if(i==150):
-                    break
-                for j in range(len(data[i])):
+    for loc in place:
+        for site in sites:
+        
+            #default
+            with open("../data/features/"+loc+"/"+site,"rb") as feature_set:
+                data = pickle.load(feature_set)
+                #[site][feature] >> [feature][site]
+                
+                for i in range(len(data)):
+                    for j in range(len(data[i])):
 
-                    
-                    if(len(Feature_data)<=j):
-                        Feature_data.append({})
-                    if site not in Feature_data[j]:
-                        Feature_data[j][site] = []
-                    if "all" not in Feature_data[j]:
-                        Feature_data[j]["all"] = []
+                        
+                        if(len(Feature_data)<=j):
+                            Feature_data.append({})
+                        if site not in Feature_data[j]:
+                            Feature_data[j][site] = []
+                        if "all" not in Feature_data[j]:
+                            Feature_data[j]["all"] = []
 
-                    Feature_data[j][site].append(data[i][j])
-                    Feature_data[j]["all"].append(data[i][j])
+                        Feature_data[j][site].append(data[i][j])
+                        Feature_data[j]["all"].append(data[i][j])
 
-        """
-        #ordins
-        with open("../data/features/odins/"+site,"rb") as feature_set:
-            data = pickle.load(feature_set)
-            #[site][feature] >> [feature][site]
-            
-            for i in range(len(data)):
-                if(i==25):
-                    break
-                for j in range(len(data[i])):
+    """
+    with open("../data/features/odins/Amazon_music1","rb") as feature_set:
+        data = pickle.load(feature_set)
+        #[site][feature] >> [feature][site]
+        
+        for i in range(len(data)):
+            if(i==100):
+                break
+            for j in range(len(data[i])):
 
-                    if(len(Feature_data)<=j):
-                        Feature_data.append({})
-                    if site not in Feature_data[j]:
-                        Feature_data[j][site] = []
-                    if "all" not in Feature_data[j]:
-                        Feature_data[j]["all"] = []
+                
+                if(len(Feature_data)<=j):
+                    Feature_data.append({})
+                if site not in Feature_data[j]:
+                    Feature_data[j][site] = []
+                if "all" not in Feature_data[j]:
+                    Feature_data[j]["all"] = []
 
-                    Feature_data[j][site].append(data[i][j])
-                    Feature_data[j]["all"].append(data[i][j])
-
-        #lib
-        with open("../data/features/lib/"+site,"rb") as feature_set:
-            data = pickle.load(feature_set)
-            #[site][feature] >> [feature][site]
-            
-            for i in range(len(data)):
-                if(i==25):
-                    break
-                for j in range(len(data[i])):
-
-                    if(len(Feature_data)<=j):
-                        Feature_data.append({})
-                    if site not in Feature_data[j]:
-                        Feature_data[j][site] = []
-                    if "all" not in Feature_data[j]:
-                        Feature_data[j]["all"] = []
-
-                    Feature_data[j][site].append(data[i][j])
-                    Feature_data[j]["all"].append(data[i][j])
-
-        """
+                Feature_data[j][site].append(data[i][j])
+                Feature_data[j]["all"].append(data[i][j])
+    """
+    print(len(Feature_data[1]["all"]))
     infos = []
-    for i in range(len(Feature_data)):
-        infos.append(info(Feature_data,i,sites,loc))
+    for i in range(3200,len(Feature_data)):
+        infos.append(info(Feature_data,i,sites,loc,savedir))
 
     return([infos])
         
 
         #Feature_data[key][s[1]] = np.reshape(Feature_data[key][s[1]],(-1,1))
-def info(Feature_data,key,sites,loc):
+def info(Feature_data,key,sites,loc,savedir):
         
     fd = np.array(Feature_data[key]["all"]).reshape(-1,1)
     fac = len(fd) ** -0.2
@@ -103,7 +81,7 @@ def info(Feature_data,key,sites,loc):
     if bw==0:
         Hc=0
         print("bw=",bw)
-        with open("../data/plot/kernel/"+loc+"/"+str(key+1)+".csv", 'w') as f:
+        with open("../data/plot/kernel/"+savedir+"/"+str(key+1)+".csv", 'w') as f:
             writer = csv.writer(f)
             writer.writerow([0])
         return(0)
@@ -151,8 +129,8 @@ def info(Feature_data,key,sites,loc):
     print(key+1,"/",len(Feature_data),"th total mutual : ",info)
     #plt.show()
     
-    fig.savefig("../data/plot/kernel/"+loc+"/"+str(key+1)+".png")
-    with open("../data/plot/kernel/"+loc+"/"+str(key+1)+".csv", 'w') as f:
+    fig.savefig("../data/plot/kernel/"+savedir+"/"+str(key+1)+".png")
+    with open("../data/plot/kernel/"+savedir+"/"+str(key+1)+".csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow([info])
     
@@ -162,34 +140,23 @@ def info(Feature_data,key,sites,loc):
 
 if __name__ == "__main__":
     sites = []
-    loc = "odins"
+    place = ["odins"]
+    savedir = "odins"
 
 
     with open("../data/sites",'r') as f1:
         site_list = f1.readlines()
-        for site in site_list:
+        for i,site in enumerate(site_list):
             s = site.split()
             if s[0] == "#":
                 continue
             sites.append(s[1])
 
-    if not os.path.isdir("../data/plot/kernel/"+loc):
-        os.makedirs("../data/plot/kernel/"+loc)
-    data = calc_kernel(sites,loc)
-    print(data)
-
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111,xlabel="feature",ylabel="rate")
-    ax1.plot(data)
-    #plt.show()
-    fig.savefig("../data/"+loc+"_data.png")
-
+    if not os.path.isdir("../data/plot/kernel/"+savedir):
+        os.makedirs("../data/plot/kernel/"+savedir)
+    data = calc_kernel(sites,place,savedir)
 
     #f = open('../data/plot/feature_info/'+target, 'wb')
-    f = open('../data/plot/feature_info/'+loc, 'wb')
+    f = open('../data/plot/feature_info/'+savedir, 'wb')
     pickle.dump(data,f)
     f.close()
-
-    with open("../data/info_old.csv","w") as f:
-        writer = csv.writer(f)
-        writer.writerows(data)

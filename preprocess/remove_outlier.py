@@ -8,7 +8,7 @@ def get_alldata(train_size,place):
     
 
     for loc in place:
-        with open("../data/sites",'r') as f:
+        with open("../data/wsfsites",'r') as f:
             sites = f.readlines()
             size = {}
             time = {}
@@ -22,11 +22,9 @@ def get_alldata(train_size,place):
                 datatime = []
 
                 for i in range(train_size):
-                    if not os.path.isfile(path +str(i)+ ".pcap"):
-                        continue
                     if os.path.isfile(path+str(i)+".csv"):
                         Time,Size,IP = pic_feature.get_csv(path+str(i)+".csv")
-                    else:
+                    elif os.path.isfile(path +str(i)+ ".pcap"):
                         Time,Size,IP = pic_feature.get_pcap(path+str(i)+".pcap")
                         print("pic pcap")
                     
@@ -43,7 +41,7 @@ def get_alldata(train_size,place):
 def remove(train_size,place,size,time):
 
     for loc in place:
-        with open("../data/sites",'r') as f:
+        with open("../data/wsfsites",'r') as f:
             sites = f.readlines()
             for site in sites:
                 s = site.split()
@@ -68,7 +66,7 @@ def remove(train_size,place,size,time):
                 
                 skip=0
                 for i in range(train_size):
-                    if not os.path.isfile(origin_path +str(i)+ ".pcap"):
+                    if not os.path.isfile(origin_path +str(i)+ ".csv"):
                         skip+=1
                         continue
                     if (size[s[1]][i-skip] < sizelow or size[s[1]][i-skip] > sizehigh):
@@ -82,8 +80,8 @@ def remove(train_size,place,size,time):
 
 
 if __name__ == "__main__":
-    train_size=150
-    place = ["odins"]
+    train_size=200
+    place = ["wsfodins"]
 
     size,time,size_list = get_alldata(train_size,place)
 

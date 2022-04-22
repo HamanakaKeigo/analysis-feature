@@ -588,6 +588,34 @@ def save_timeburst(Size,Time):
 
     return burst
 
+def save_timecumul(Time,Size):
+    feature=[]
+    infeature=[]
+    outfeature=[]
+    featurecount = 50
+    line = np.linspace(0,100,featurecount+1)
+    line = np.round(line)
+
+    inp=[]
+    outp=[]
+
+    for i in range(len(Size)):
+        if Size[i]>0:#送信
+            outp.append(Time[i])
+        else:
+            inp.append(Time[i])
+
+
+    for i in line:
+        if i==0:
+            continue
+        infeature.append(np.percentile(inp,i))
+        outfeature.append(np.percentile(outp,i))
+
+    feature.extend(infeature)
+    feature.extend(outfeature)
+    return feature
+
 def get_allfeature(Time=[],Size=[],IP=[]):
 
     features=[]
@@ -615,6 +643,8 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     features.append(save_Cumul50(Size))
     features.append(save_CDNburst(Time,Size,IP))
     features.append(save_timesp(Time,Size))
+    features.append(save_timeburst(Size,Time))
+    features.append(save_timecumul(Time,Size))
     
 
     return features
@@ -663,6 +693,7 @@ def get_pcap(filename):
                 Size.append(-int(packet.length))
                 IP.append(packet.ip.host)
                 Time.append(float(packet.sniff_timestamp))
+
     data.close()
 
     return (Time,Size,IP)
@@ -691,6 +722,8 @@ def pic_mydata():
     place = ["odins"]
 
     for loc in place:
+        if not os.path.isdir('../data/features/'+loc):
+            os.makedirs('../data/features/'+loc)
         with open("../data/sites",'r') as f:
             sites = f.readlines()
             for site in sites:
@@ -702,7 +735,7 @@ def pic_mydata():
                 filelist = os.listdir(path)
                 #print(files)
                 features=[]
-                for i in range(len(filelist)):
+                for i in range(200):
                     if len(features)==train_size:
                         break
                     if not os.path.isfile(path+"/"+str(i)+".csv"):

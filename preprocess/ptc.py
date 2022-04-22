@@ -61,7 +61,7 @@ def to_csv(filename=""):
     i=0
     for packet in data:
         #print(i)
-        if "TCP" in packet:
+        if "TCP" in packet and "IP" in packet:
             #print(packet.wirelen,packet.time,packet["IP"].src)
             t = []
             t.append(i)
@@ -82,8 +82,8 @@ def to_csv(filename=""):
 
 if __name__ == "__main__":
     
-    loc = "icn2"
-    train_size = 150
+    loc = "wsfodins"
+    train_size = 200
 
     with open("../data/wsfsites",'r') as f:
         sites = f.readlines()

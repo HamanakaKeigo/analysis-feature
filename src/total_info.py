@@ -175,6 +175,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         #print(val)
         #print(err)
     fig.savefig("../data/plot/kernel/total/"+str(id+1)+".png")
+    plt.close('all')
     with open("../data/plot/kernel/total/"+str(id+1)+".csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow([Hcf - Hc])
@@ -189,7 +190,7 @@ def kde_1d(Feature_data=[],sites=None,id=0):
 def kde_multi(Feature_data=[],sites=None):
     #2次元データ
     print(len(Feature_data))
-    dim = 2
+    dim = 4
     start = 3093
     cumul = np.linspace(start+0, start+49, dim,dtype=np.int32)
     cdn = np.linspace(start+50, start+99, dim,dtype=np.int32)

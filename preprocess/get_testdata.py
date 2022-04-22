@@ -12,10 +12,10 @@ import time
 
 if __name__ == "__main__":
 
-    test_epoch = 150
+    test_epoch = 5
     loc = "icn"
 
-    with open("../data/sites",'r') as f:
+    with open("../data/wsfsites",'r') as f:
         sites = f.readlines()
         for site in sites:
             s = site.split()
