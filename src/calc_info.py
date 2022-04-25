@@ -21,7 +21,7 @@ def calc_kernel(sites=[],place="",savedir=""):
 
 
     for loc in place:
-        for site in sites:
+        for i,site in enumerate(sites):
         
             #default
             with open("../data/features/"+loc+"/"+site,"rb") as feature_set:
@@ -65,7 +65,7 @@ def calc_kernel(sites=[],place="",savedir=""):
     """
     print(len(Feature_data[1]["all"]))
     infos = []
-    for i in range(3200,len(Feature_data)):
+    for i in range(len(Feature_data)):
         infos.append(info(Feature_data,i,sites,loc,savedir))
 
     return([infos])
@@ -102,7 +102,7 @@ def info(Feature_data,key,sites,loc,savedir):
     #print(estimate)
     Hcf=0
     Hc=0
-    for site in sites:
+    for i,site in enumerate(sites):
         sfd = np.array(Feature_data[key][site]).reshape(-1,1)
         #print(sfd)
         kde_s = KernelDensity(kernel="gaussian",bandwidth=bw).fit(sfd)
@@ -140,8 +140,10 @@ def info(Feature_data,key,sites,loc,savedir):
 
 if __name__ == "__main__":
     sites = []
+    siteslist=[]
     place = ["odins"]
-    savedir = "odins"
+    savedir = "odins11"
+    addnum=[83, 65, 96, 8, 16, 67, 36, 41, 94, 73, 61]
 
 
     with open("../data/sites",'r') as f1:
@@ -150,7 +152,11 @@ if __name__ == "__main__":
             s = site.split()
             if s[0] == "#":
                 continue
-            sites.append(s[1])
+            siteslist.append(s[1])
+    
+    for i in addnum:
+        sites.append(siteslist[i])
+    print(sites)
 
     if not os.path.isdir("../data/plot/kernel/"+savedir):
         os.makedirs("../data/plot/kernel/"+savedir)
