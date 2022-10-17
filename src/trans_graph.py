@@ -24,10 +24,12 @@ def plot_trans(sites,place,savename):
                 for i in range(len(data)):
                     if(i==10):
                         break
+                    #plot.append(data[i][2943:2993]) #inCUMUL
+                    plot.append(data[i][2993:3043]) #outCUMUL
                     #plot.append(data[i][3093:3143]) #CUMUL
                     #plot.append(data[i][3143:3193]) #CDN
                     #plot.append(data[i][3193:3243]) #Time
-                    plot.append(data[i][3293:3343]) #inTime
+                    #plot.append(data[i][3293:3343]) #inTime
                     
             graph[site]=plot
 
@@ -40,9 +42,11 @@ def plot_trans(sites,place,savename):
         for i in range(len(data)):
             if(i==10):
                 break
+            #plot.append(data[i][2943:2993]) #inCUMUL
+            plot.append(data[i][2993:3043]) #outCUMUL
             #plot.append(data[i][3093:3143]) #CUMUL
             #plot.append(data[i][3143:3193]) #CDN
-            plot.append(data[i][3193:3243]) #Time
+            #plot.append(data[i][3193:3243]) #Time
     graph["google"]=plot
     
     #print(graph["Amazon_audio1"])

@@ -7,6 +7,7 @@ import scipy.io
 import itertools
 import math
 import csv
+import matplotlib.pyplot as plt
 
 def save_burst(Size):
     
@@ -155,7 +156,7 @@ def save_ngram(Size=[],n=0):
 
     return buckets
 
-def save_transpos(Size=[]):
+def save_transpos(Time,Size=[]):
     in_count=0
     out_count=0
     in_feature=[]
@@ -164,6 +165,8 @@ def save_transpos(Size=[]):
 
     for i in range(len(Size)):
         if out_count>=300 and in_count>=300:
+            #print("Trans finPacket:",i,"/",len(Size))
+            #print("Trans finTime:",Time[i],"/",Time[-1])
             break
 
         if (Size[i]>0):
@@ -192,7 +195,7 @@ def save_transpos(Size=[]):
     return feature
 
 
-def save_intI(Size=[]):
+def save_intI(Time,Size=[]):
     feature=[]
     in_count=0
     in_pre=0
@@ -203,6 +206,8 @@ def save_intI(Size=[]):
 
     for i in range(0,len(Size)):
         if in_count>=300 and out_count>=300:
+            print("IntI finPacket:",i,"/",len(Size))
+            print("IntI finTime:",Time[i],"/",Time[-1])
             break
         
         if Size[i]>0:
@@ -409,24 +414,73 @@ def save_CDNburst(Time=[],Size=[],IP=[]):
     for i in range(len(IP)):
         if(Size[i]<0):
             if(IP[i] not in ip):
-                ip[IP[i]] = [ Time[i] , [abs(Size[i])] ]
+                ip[IP[i]] = [ [ [Time[i]] ] , [[abs(Size[i])]] ,[[i]] ]
             else:
-                if(Time[i] - ip[IP[i]][0] < delta):
-                    ip[IP[i]][1][-1] += abs(Size[i])
-                elif(Time[i] - ip[IP[i]][0] >= delta):
-                    ip[IP[i]][1].append(abs(Size[i]))
-                ip[IP[i]][0] = Time[i]
-    bursts=[]
-    for x in ip.values():
-        bursts.extend(x[1])
-    bursts.sort(reverse=True)
-    if(len(bursts)>50):
-        bursts = bursts[:50]
-    else:
-        for i in range(len(bursts),50):
-            bursts.append(0)
+                if(Time[i] - ip[IP[i]][0][-1][-1] < delta):
+                    ip[IP[i]][2][-1].append(i)
+                    ip[IP[i]][1][-1].append(ip[IP[i]][1][-1][-1] + abs(Size[i]))
+                    ip[IP[i]][0][-1].append(Time[i])
 
-    return bursts
+                elif(Time[i] - ip[IP[i]][0][-1][-1] >= delta):
+                    ip[IP[i]][2].append([i])
+                    ip[IP[i]][1].append([abs(Size[i])])
+                    ip[IP[i]][0].append([Time[i]])
+                    
+                
+    bursts=[]
+    times=[]
+    counts=[]
+    ipaddr=[]
+    burstsize=[]
+    bursttime=[]
+    bursts_sorted=[]
+
+    for x in ip.keys():
+        #print(len(x[0]),len(x[1]))
+        for t in ip[x][0]:
+            times.append(t)
+            bursttime.append(t[0])
+        for s in ip[x][1]:
+            bursts.append(s)
+            burstsize.append(s[-1])
+        for c in ip[x][2]:
+            counts.append(c)
+            ipaddr.append(x)
+
+    arg=np.argsort(burstsize)[::-1]
+    #bursts.sort(reverse=True)
+
+    print("--CDNburst--")
+    for i in arg:
+        if i==50:
+            break
+        bursts_sorted.append(bursts[i])
+    b=[]
+    for i,index in enumerate(arg):
+        if i==50:
+            break
+        b.append(bursts[index][-1])
+        #print(ipaddr[index],bursts[index][-1],times[index][0],"(",counts[index][0],")",times[index][-1],"(",counts[index][-1],")")
+    print(b)
+    fig = plt.figure()
+    fig.set_figheight(6)
+    fig.set_figwidth(8)
+    ax1 = fig.add_subplot(111,xlabel="time",ylabel="size")
+    sizearg=np.argsort(bursttime)
+    size=0
+    colorlist=["b","g","r","y","m"]
+    for index in sizearg:
+        if index in arg[:5]:
+            x=np.where(arg[:5]==index)
+            ax1.plot(times[index],size+np.array(bursts[index]),color=colorlist[x[0][0]],label=x[0][0])
+        else:
+            ax1.plot(times[index],size+np.array(bursts[index]),color="k")
+        size+=bursts[index][-1]
+    ax1.legend()
+    #plt.show()
+    plt.close("all")
+    
+    return bursts_sorted[:50]
 
 def save_timesp(Time,Size):
     feature=[]
@@ -616,6 +670,50 @@ def save_timecumul(Time,Size):
     feature.extend(outfeature)
     return feature
 
+def save_persec(Time):
+
+    feature=[]
+    count = [0]*100
+
+    for i in range(len(Time)):
+        t = int( np.floor(Time[i]*50))
+        if t < 100:
+            count[t] += 1
+    feature.extend(count)
+
+    return feature
+
+def save_mycumul(Size):
+    featurecount=50
+    feature=[]
+    inCUMUL = [0]
+    outCUMUL =[0]
+
+    for size in Size:
+        size = -size
+        if size>0:
+            inCUMUL.append(inCUMUL[-1]+size)
+        else:
+            outCUMUL.append(outCUMUL[-1]+size)
+
+    x = np.linspace(0,len(inCUMUL)-1,featurecount+1)
+    y = np.linspace(0,len(outCUMUL)-1,featurecount+1)
+    x = np.round(x)
+    y = np.round(y)
+    
+    for i in x:
+        if i==0:
+            continue
+        feature.append(inCUMUL[int(i)])
+
+    for i in y:
+        if i==0:
+            continue
+        feature.append(outCUMUL[int(i)])
+    #print(len(feature))
+    return feature
+
+
 def get_allfeature(Time=[],Size=[],IP=[]):
 
     features=[]
@@ -627,8 +725,8 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     for n in range(2,7):
         ngram.extend(save_ngram(Size,n))
     features.append(ngram)
-    features.append(save_transpos(Size))
-    features.append(save_intI(Size))
+    features.append(save_transpos(Time,Size))
+    features.append(save_intI(Time,Size))
     features.append(save_intII_III(Size))
     features.append(save_dist(Size))
     #features.append(save_dist(Size))
@@ -636,8 +734,8 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     features.append(save_ht(Size))
     features.append(save_PktSec(Time,Size))
     features.append(save_cumul(Size))
-    if(len(IP)>0):
-        features.append(save_CDNburst(Time,Size,IP))
+
+    features.append(save_CDNburst(Time,Size,IP))
     
     
     features.append(save_Cumul50(Size))
@@ -645,8 +743,9 @@ def get_allfeature(Time=[],Size=[],IP=[]):
     features.append(save_timesp(Time,Size))
     features.append(save_timeburst(Size,Time))
     features.append(save_timecumul(Time,Size))
-    
 
+    features.append(save_persec(Time))
+    features.append(save_mycumul(Size))
     return features
 
 def get_features(filename = ""):
@@ -719,12 +818,13 @@ def get_csv(filename = ""):
 
 def pic_mydata():
     train_size=100
-    place = ["odins"]
+    valid_size=10
+    place = ["wsfodins"]
 
     for loc in place:
         if not os.path.isdir('../data/features/'+loc):
             os.makedirs('../data/features/'+loc)
-        with open("../data/sites",'r') as f:
+        with open("../data/wsfsites",'r') as f:
             sites = f.readlines()
             for site in sites:
 
@@ -734,24 +834,40 @@ def pic_mydata():
                 path = "../data/dataset/processed/"+loc+"/"+s[1]
                 filelist = os.listdir(path)
                 #print(files)
-                features=[]
+                train=[]
+                valid=[]
                 for i in range(200):
-                    if len(features)==train_size:
-                        break
                     if not os.path.isfile(path+"/"+str(i)+".csv"):
                         continue
-                    print(path+"/"+str(i)+".csv")
-                    get = get_features(path+"/"+str(i)+".csv")
+                    if len(train)<train_size:
+                        #print("train:",path+"/"+str(i)+".csv")
+                        get = get_features(path+"/"+str(i)+".csv")
 
-                    feature=[]
-                    for g in get:
-                        feature.extend(g)
-                    features.append(feature)
-                print(s[1],len(features))
-                if(len(features) < train_size):
-                    print("train data is less tha train_size",s[1])
+                        feature=[]
+                        for g in get:
+                            feature.extend(g)
+                        train.append(feature)
+                    elif len(valid)<valid_size:
+                        #print("valid:",path+"/"+str(i)+".csv")
+                        get = get_features(path+"/"+str(i)+".csv")
+
+                        feature=[]
+                        for g in get:
+                            feature.extend(g)
+                        valid.append(feature)
+                    else:
+                        break
+                print("train:",s[1],len(train),len(train[0]))
+                print("valid:",s[1],len(valid),len(valid[0]))
+                if(len(train) < train_size):
+                    print("train data is less than train_size",s[1])
+                if(len(valid) < valid_size):
+                    print("valid data is less than train_size",s[1])
                 f = open('../data/features/'+loc+"/"+s[1], 'wb')
-                pickle.dump(features,f)
+                pickle.dump(train,f)
+                f.close()
+                f = open('../data/features/'+loc+"/"+s[1]+"_valid", 'wb')
+                pickle.dump(valid,f)
                 f.close()
 
         #print(site_data)

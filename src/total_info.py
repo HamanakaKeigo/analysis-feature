@@ -174,11 +174,15 @@ def kde_1d(Feature_data=[],sites=None,id=0):
         Hcf += val
         #print(val)
         #print(err)
+
+    """
     fig.savefig("../data/plot/kernel/total/"+str(id+1)+".png")
     plt.close('all')
+    
     with open("../data/plot/kernel/total/"+str(id+1)+".csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow([Hcf - Hc])
+    """
     #plt.show()
 
 

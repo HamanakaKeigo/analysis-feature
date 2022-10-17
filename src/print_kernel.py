@@ -96,6 +96,6 @@ with open("../data/feature",'r') as f1:
         
         plt.legend()
         plt.show()
-        fig.savefig("../data/"+f[0]+".png")
+        fig.savefig("../data/"+f[0]+".pdf")
         print("--------------------")
 
