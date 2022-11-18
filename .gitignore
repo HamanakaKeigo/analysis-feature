@@ -1,6 +1,7 @@
 data/dataset/origin
 data/dataset/old
 test
+my_scipy
 *.prof
 *.pcap
 *.png
